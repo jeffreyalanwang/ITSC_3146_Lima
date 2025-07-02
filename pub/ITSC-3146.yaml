@@ -1,0 +1,44 @@
+minimumLimaVersion: 1.1.0
+
+# VM hardware config
+disk: 12GiB
+
+# Inherit defaults for Ubuntu at our desired version
+base:
+- template://ubuntu-24.04 # points to data from template://_images/ and template://_default/
+                          # see: https://github.com/lima-vm/lima/blob/master/templates/ubuntu-24.04.yaml
+
+# Provide custom images
+images:
+- location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img
+  arch: x86_64
+- location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-arm64.img
+  arch: aarch64
+
+# VM host interop config
+ssh:
+  forwardX11: true # enable use of XQuartz
+
+# Allow lima to work with our injected cloud-init scripts
+user:
+  name: itsc
+  uid: 1000
+  home: /home/{{.User}}
+
+provision:
+- mode: system
+  file: /etc/CCI/lima/lima-oobe-itsc.sh
+
+probes:
+- mode: readiness
+  description: IMUNES to be installed
+  script: |
+     #!/bin/bash
+     set -eux -o pipefail
+     if ! timeout 60s bash -c "until command -v imunes; do sleep 3; done"; then
+       echo >&2 "IMUNES is not installed yet"
+       exit 1
+     fi
+  hint: |
+    IMUNES was not installed in the guest. Make sure the package system is working correctly.
+    Also see "/var/log/cloud-init-output.log" in the guest.
