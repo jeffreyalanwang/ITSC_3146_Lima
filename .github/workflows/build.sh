@@ -13,12 +13,12 @@ BUILD_CONFIG_JSON="${REPO_DIR}/build_config.json"
 BUILD_OUTPUT_DIR="${REPO_DIR}/build"
 mkdir -p "$BUILD_OUTPUT_DIR"
 
-ADD_ARCHIVE_FILE_SCRIPT="${GITHUB_DIR}/actions/add_archive_file/add_archive_file.sh"
+ADD_IMAGE_FILE_SCRIPT="${GITHUB_DIR}/actions/add_image_file/add_image_file.sh"
 GET_UBUNTU_IMAGES_SCRIPT="${GITHUB_DIR}/actions/get_ubuntu_images/get_ubuntu_images.sh"
-if [[ ! -f "$ADD_ARCHIVE_FILE_SCRIPT" ]] || [[ ! -f "$GET_UBUNTU_IMAGES_SCRIPT" ]]; then
+if [[ ! -f "$ADD_IMAGE_FILE_SCRIPT" ]] || [[ ! -f "$GET_UBUNTU_IMAGES_SCRIPT" ]]; then
     echo "Error: A dependency was not found at its expected path." >&2
     echo "Expected paths:" >&2
-    echo "ADD_ARCHIVE_FILE_SCRIPT: $ADD_ARCHIVE_FILE_SCRIPT" >&2
+    echo "ADD_IMAGE_FILE_SCRIPT: $ADD_IMAGE_FILE_SCRIPT" >&2
     echo "GET_UBUNTU_IMAGES_SCRIPT: $GET_UBUNTU_IMAGES_SCRIPT" >&2
     exit 1
 fi
@@ -127,7 +127,7 @@ main() {
 
         # Call helper script
         echo "$files_json" |
-            "$ADD_ARCHIVE_FILE_SCRIPT" main "$base_image_path" "$final_image_path"
+            "$ADD_IMAGE_FILE_SCRIPT" main "$base_image_path" "$final_image_path"
     done
 
     echo "Created images: " "${!base_images[@]}" # prints keys e.g. arm64
