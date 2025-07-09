@@ -127,7 +127,7 @@ main() {
 
         # Call helper script
         echo "$files_json" |
-            $ADD_ARCHIVE_FILE_SCRIPT main "$base_image_path" "$final_image_path"
+            "$ADD_ARCHIVE_FILE_SCRIPT" main "$base_image_path" "$final_image_path"
     done
 
     echo "Created images: " "${!base_images[@]}" # prints keys e.g. arm64
