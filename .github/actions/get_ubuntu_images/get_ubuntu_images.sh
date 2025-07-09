@@ -46,66 +46,54 @@ echo_args() {
 #
 populated_links=false
 # shellcheck disable=SC2120 # param_count is 0
-get_wsl_image_links() { #TODO test using expected string lengths or URL format and expected substring presence (arm/amd)
+get_lima_image_links() {
     param_count 0 $#
-    # Latest Ubuntu WSL image available at:
-    # https://github.com/microsoft/WSL/blob/master/distributions/DistributionInfo.json
-    # (access using raw link: https://raw.githubusercontent.com/microsoft/WSL/refs/heads/master/distributions/DistributionInfo.json)
 
-    local all_ubuntu_json_objs
-    all_ubuntu_json_objs="$(curl 'https://raw.githubusercontent.com/microsoft/WSL/refs/heads/master/distributions/DistributionInfo.json' | jq '.ModernDistributions.Ubuntu[]')"
-    # # value of $all_ubuntu_json_objs
-    # # (note the lack of comma at top-level. this works for jq)
-    # {
-    #   "Name": "Ubuntu",
-    #   "FriendlyName": "Ubuntu",
-    #   "Default": true,
-    #   "Amd64Url": {
-    #     "Url": "https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl",
-    #     "Sha256": "5d1eea52103166f1c460dc012ed325c6eb31d2ce16ef6a00ffdfda8e99e12f43"
-    #   },
-    #   "Arm64Url": {
-    #     "Url": "https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl",
-    #     "Sha256": "75e6660229fabb38a6fdc1c94eec7d834a565fa58a64b7534e540da5319b2576"
-    #   }
-    # }
-    # {
-    #   "Name": "Ubuntu-24.04",
-    #   "FriendlyName": "Ubuntu 24.04 LTS",
-    #   "Default": false,
-    #   "Amd64Url": {
-    #     "Url": "https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl",
-    #     "Sha256": "5d1eea52103166f1c460dc012ed325c6eb31d2ce16ef6a00ffdfda8e99e12f43"
-    #   },
-    #   "Arm64Url": {
-    #     "Url": "https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl",
-    #     "Sha256": "75e6660229fabb38a6fdc1c94eec7d834a565fa58a64b7534e540da5319b2576"
-    #   }
-    # }
+    # Ubuntu LTS (latest) Lima image links:
+    # https://github.com/lima-vm/lima/blob/master/templates/_images/ubuntu-lts.yaml
+    # (access using raw link: https://raw.githubusercontent.com/lima-vm/lima/refs/heads/master/templates/_images/ubuntu-lts.yaml)
 
-    local ubuntu_version select_version_query ubuntu_json_obj
-    ubuntu_version="Ubuntu-24.04" # You may also set this to 'Ubuntu' for the latest version.
-    select_version_query='select(.Name == "'"$ubuntu_version"'")'
-    ubuntu_json_obj="$(echo "$all_ubuntu_json_objs" | jq "$select_version_query")"
-    # # value of $ubuntu_json_obj
-    # {
-    #   "Name": "Ubuntu-24.04",
-    #   "FriendlyName": "Ubuntu 24.04 LTS",
-    #   "Default": false,
-    #   "Amd64Url": {
-    #     "Url": "https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl",
-    #     "Sha256": "5d1eea52103166f1c460dc012ed325c6eb31d2ce16ef6a00ffdfda8e99e12f43"
-    #   },
-    #   "Arm64Url": {
-    #     "Url": "https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl",
-    #     "Sha256": "75e6660229fabb38a6fdc1c94eec7d834a565fa58a64b7534e540da5319b2576"
-    #   }
-    # }
+    # Ubuntu 24.04 Lima image links:
+    # https://github.com/lima-vm/lima/blob/master/templates/_images/ubuntu-24.04.yaml
+    # (raw: https://raw.githubusercontent.com/lima-vm/lima/refs/heads/master/templates/_images/ubuntu-24.04.yaml)
 
-    amd64url="$(echo "$ubuntu_json_obj" | jq --raw-output '.Amd64Url.Url')"
-    amd64sha256="$(echo "$ubuntu_json_obj" | jq --raw-output '.Amd64Url.Sha256')"
-    arm64url="$(echo "$ubuntu_json_obj" | jq --raw-output '.Arm64Url.Url')"
-    arm64sha256="$(echo "$ubuntu_json_obj" | jq --raw-output '.Arm64Url.Sha256')"
+    local all_ubuntu_image_options
+    all_ubuntu_image_options="$(curl 'https://raw.githubusercontent.com/lima-vm/lima/refs/heads/master/templates/_images/ubuntu-24.04.yaml' | yq '.images')"
+    # # value of `all_ubuntu_image_options`, without some list items
+    # - location: "https://cloud-images.ubuntu.com/releases/noble/release-20250516/ubuntu-24.04-server-cloudimg-amd64.img"
+    #   arch: "x86_64"
+    #   digest: "sha256:8d6161defd323d24d66f85dda40e64e2b9021aefa4ca879dcbc4ec775ad1bbc5"
+    # - location: "https://cloud-images.ubuntu.com/releases/noble/release-20250516/ubuntu-24.04-server-cloudimg-arm64.img"
+    #   arch: "aarch64"
+    #   digest: "sha256:c933c6932615d26c15f6e408e4b4f8c43cb3e1f73b0a98c2efa916cc9ab9549c"
+    # [...]
+    # - location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img
+    #   arch: x86_64
+    # - location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-arm64.img
+    #   arch: aarch64
+
+    local ubuntu_images_with_sha
+    ubuntu_images_with_sha="$( echo "$all_ubuntu_image_options" | yq 'filter(has("digest"))' )"
+    # This ends up using the daily stable builds, because only those seem to have a digest.
+    # We could use the non-daily builds but it doesn't seem to matter anyways (only difference is probably up-to-date packages).
+    #
+    # # value of `ubuntu_images_with_sha`, without some list items
+    # - location: "https://cloud-images.ubuntu.com/releases/noble/release-20250516/ubuntu-24.04-server-cloudimg-amd64.img"
+    #   arch: "x86_64"
+    #   digest: "sha256:8d6161defd323d24d66f85dda40e64e2b9021aefa4ca879dcbc4ec775ad1bbc5"
+    # - location: "https://cloud-images.ubuntu.com/releases/noble/release-20250516/ubuntu-24.04-server-cloudimg-arm64.img"
+    #   arch: "aarch64"
+    #   digest: "sha256:c933c6932615d26c15f6e408e4b4f8c43cb3e1f73b0a98c2efa916cc9ab9549c"
+    # [...]
+
+    amd64url="$(echo "$ubuntu_images_with_sha" | yq 'filter(.arch == "x86_64") | .[0].location')"
+    amd64sha256="$(echo "$ubuntu_images_with_sha" | yq 'filter(.arch == "x86_64") | .[0].digest')"
+    arm64url="$(echo "$ubuntu_images_with_sha" | yq 'filter(.arch == "aarch64") | .[0].location')"
+    arm64sha256="$(echo "$ubuntu_images_with_sha" | yq 'filter(.arch == "aarch64") | .[0].digest')"
+
+    # Post-process digest strings: remove "sha256:" prefix
+    amd64sha256="${amd64sha256#'sha256:'}"
+    arm64sha256="${arm64sha256#'sha256:'}"
 
     populated_links=true
 }
@@ -151,38 +139,44 @@ download_or_keep() {
 
     local needs_download
     needs_download=false
-    if [[ -e "$path" ]]; then # file already exists at the expected destination
-        
-        if { check_file_sum "$path" "$sha256sum"; }; then # file has the desired hash
-            needs_download=false
+    local loop_end # stop once we have a path where it's cached,
+                   # or we have created an unused path to download anew
+    while [[ "$loop_end" != 'true' ]]; do
 
-        else # file hash does not match
+        if [[ ! -e "$path" ]]; then # file doesn't exist yet
+
             needs_download=true
+            loop_end=true
 
-            # we will need to save with a new filename
-            while [[ -e "$path" ]]; do
-                path="${path}.1"
-            done
+        elif { check_file_sum "$path" "$sha256sum"; }; then # file has the desired hash
+            
+            needs_download=false
+            loop_end=true
+
+        else # this file's hash does not match
+        
+            # create a new path, check that one
+            path="${path}.1"
+            loop_end=false
+
         fi
 
-    else # file doesn't exist yet
-        needs_download=true
-    fi
+    done
 
     if [[ "$needs_download" == 'true' ]]; then
         if [[ -e "$path" ]]; then
             echo "Error: unreachable situation occurred." >&2
             exit 1
         fi
-        wget "$url" -O- > "$path"
+        curl "$url" > "$path"
     fi
 
     # output
     echo "$path"
 }
 
-# Download the Ubuntu WSL images to a temporary directory.
-# `get_wsl_image_links` will be automatically called if needed.
+# Download the Ubuntu images to a temporary directory.
+# `get_lima_image_links` will be automatically called if needed.
 #
 # # Output stored in shell variables:
 # populated_files:  Whether the output variables can be used yet.
@@ -190,16 +184,16 @@ download_or_keep() {
 # arm64img:         Path to the arm64 WSL image.
 #
 # shellcheck disable=SC2120 # param_count is 0
-download_wsl_images() {
+download_lima_images() {
     param_count 0 $#
     if [[ "$populated_links" != 'true' ]]; then
-        get_wsl_image_links
+        get_lima_image_links
     fi
 
     # These may not end up being the ultimate paths we use.
     local amd64img_path arm64img_path
-    amd64img_path="${temp_dir}/amd64_base_img_${amd64sha256:0:5}.wsl"
-    arm64img_path="${temp_dir}/arm64_base_img_${arm64sha256:0:5}.wsl"
+    amd64img_path="${temp_dir}/amd64_base_img_${amd64sha256:0:5}.img"
+    arm64img_path="${temp_dir}/arm64_base_img_${arm64sha256:0:5}.img"
 
     # Download
     amd64img_path="$(download_or_keep "$amd64url" "$amd64img_path" "$amd64sha256")"
@@ -211,9 +205,9 @@ download_wsl_images() {
     populated_files=true
 }
 
-# Check downloaded WSL images against their provided SHA256 sums.
+# Check downloaded Ubuntu images against their provided SHA256 sums.
 #
-# Requires (from `get_wsl_image_links` and `download_wsl_images`):
+# Requires (from `get_lima_image_links` and `download_lima_images`):
 #    `[[ "$populated_links" = 'true' ]]` \
 # && `[[ "$populated_files" = 'true' ]]`
 #
@@ -224,7 +218,7 @@ check_images() {
     param_count 0 $#
     
     if [[ ! ("$populated_links" == 'true' && "$populated_files" == 'true') ]]; then
-        echo "Required values not present (did you run get_wsl_image_links and download_wsl_images?)." >&2
+        echo "Required values not present (did you run get_lima_image_links and download_lima_images?)." >&2
         echo "populated_links: $populated_links" >&2
         echo "populated_files: $populated_files" >&2
         exit 1
@@ -260,8 +254,8 @@ check_images() {
 main() {
     param_count 0 $#
 
-    get_wsl_image_links
-    download_wsl_images
+    get_lima_image_links
+    download_lima_images
     check_images
 
     echo -n '[amd64]='
