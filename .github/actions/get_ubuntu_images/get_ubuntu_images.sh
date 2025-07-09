@@ -35,7 +35,7 @@ echo_args() {
     echo "$2"
 }
 
-# Get the most up-to-date Ubuntu WSL image file links + checksums.
+# Get the most up-to-date Ubuntu image file links + checksums.
 #
 # Output stored in shell variables:
 # populated_links:  Whether the output variables can be used yet.
@@ -180,8 +180,8 @@ download_or_keep() {
 #
 # # Output stored in shell variables:
 # populated_files:  Whether the output variables can be used yet.
-# amd64img:         Path to the amd64 WSL image.
-# arm64img:         Path to the arm64 WSL image.
+# amd64img:         Path to the amd64 image.
+# arm64img:         Path to the arm64 image.
 #
 # shellcheck disable=SC2120 # param_count is 0
 download_lima_images() {
@@ -241,7 +241,7 @@ check_images() {
     fi
 }
 
-# Download the most up-to-date Ubuntu WSL image files.
+# Download the most up-to-date Ubuntu image files.
 # 
 # stdout:       Each line provides the path to one of the downloaded images.
 #               Read into an array with:
