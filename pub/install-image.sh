@@ -8,4 +8,5 @@ limactl create --tty=false "https://raw.githubusercontent.com/jeffreyalanwang/Li
 
 # configure host SSH
 echo "Adding instance SSH config to ~/.ssh/config..."
-limactl show-ssh --format=config "$instance_name" >> ~/.ssh/config
+echo 'Include ~/.lima/*/ssh.config' >> ~/.ssh/config # a live-updating version of the below
+#limactl show-ssh --format=config "$instance_name" >> ~/.ssh/config

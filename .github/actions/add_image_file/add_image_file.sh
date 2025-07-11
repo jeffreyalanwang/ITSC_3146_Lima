@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e -o pipefail
 
+# The .img file that Lima uses for its default Ubuntu configuration
+# turns out to be a gzipped tar archive.
+# 
+# As a result, this file has the same behavior as add_image_file
+# (WSL version of this build action).
+
 temp_dir="/tmp"
 if [[ -n "$RUNNER_TEMP" ]]; then
     temp_dir=$RUNNER_TEMP # use GitHub Actions' temp dir if available

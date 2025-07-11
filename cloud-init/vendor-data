@@ -1,8 +1,12 @@
 #cloud-config
 
+# NOTE: Lima provides cloud-init with user-data, which overrides vendor-data.
+#       If any values here are overridden, you may be able to change Lima's
+#       user-data config by editing ITSC-3146.yaml (i.e. the Lima VM's config)
+
 # Sets default user
-user:
-  name: itsc
+users: # overrides Lima's user-data config
+- name: itsc
   shell: /bin/bash
   lock_passwd: false
   groups: [adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, users, netdev, docker]
@@ -48,3 +52,12 @@ runcmd:
   # ensure users have something to see when they test VS Code functionality
 - echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
 - chown itsc /home/itsc/.bash_history
+
+  # workaround for XQuartz interop issue
+  # see: https://github.com/lima-vm/lima/issues/989
+- |
+  cat <<- 'EOF' >> /home/itsc/.profile
+  	
+  	# Run this in every login shell (some programs need it for X11 forwarding)
+  	export XAUTHORITY=$HOME/.Xauthority
+  	EOF
