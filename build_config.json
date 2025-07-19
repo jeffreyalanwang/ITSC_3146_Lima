@@ -4,6 +4,6 @@
         "/cloud-init/vendor-data": "/etc/CCI/cloud-init/vendor-data",
         "/cloud-init/user-data": "/etc/CCI/cloud-init/user-data",
         "/cloud-init/meta-data": "/etc/CCI/cloud-init/meta-data",
-        "/lima-runtime/lima-oobe-itsc.sh": "/etc/CCI/lima-oobe-itsc.sh"
+        "/lima-runtime/lima-oobe-itsc.sh": "/etc/CCI/lima/lima-oobe-itsc.sh"
     }
 }
