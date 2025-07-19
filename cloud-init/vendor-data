@@ -39,11 +39,11 @@ power_state:
 
 runcmd:
   # install IMUNES
-- git clone https://github.com/jeffreyalanwang/imunes.git /run/imunes_temp/
-- cd /run/imunes_temp
+- git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
+- cd /tmp/imunes_temp
 - sudo make install
 - cd
-- rm -rf /run/imunes_temp
+- rm -rf /tmp/imunes_temp
 - sudo imunes -p # probably won't work unless the system has been restarted since installing docker.io
   
   # include IMUNES templates in home directory
