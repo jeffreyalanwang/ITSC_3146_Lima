@@ -18,6 +18,14 @@ images:
 # VM host interop config
 ssh:
   forwardX11: true # enable use of XQuartz
+  forwardX11Trusted: true
+
+mounts:
+- location: "{{.GlobalTempDir}}/lima"
+  mountPoint: /tmp/lima
+  writable: true
+- location: "{{.Home}}"
+  writable: true
 
 # Allow lima to work with our injected cloud-init scripts
 user:
