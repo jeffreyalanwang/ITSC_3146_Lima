@@ -1,11 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# ^ Equivalent to /bin/bash or whatever `PATH` would choose,
+#   for Mac systems which require Homebrew-installed bash (see below regarding readarray).
+
 set -e -o pipefail
 
-# The .img file that Lima uses for its default Ubuntu configuration
-# turns out to be a gzipped tar archive.
-# 
-# As a result, this file has the same behavior as add_image_file
-# (WSL version of this build action).
+# Ensure our bash supports readarray.
+{ echo "" | readarray ; } || {
+    echo "Error: this version of bash does not support readarray." >&2
+    echo "This may be because the default version of bash provided on Mac systems is outdated." >&2
+    echo "Try: brew install bash" >&2
+    exit 1
+}
+
+# At the moment, this script actually shouldn't be run on Mac (despite the above check for readarray),
+# because Macs have no support for mounting ext4
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    echo "Error: this script is not supported on Mac systems." >&2
+    echo "If you are using a Mac, please use a Linux VM or Docker container instead." >&2
+    exit 1
+fi
 
 temp_dir="/tmp"
 if [[ -n "$RUNNER_TEMP" ]]; then
@@ -41,138 +54,127 @@ echo_args() {
     echo "$2"
 }
 
-# Get a temporary directory, and unzip a gzipped file there.
+# Get a temporary directory, and mount an .img file there.
 #
-# $1:       Path to a gzipped file.
-#           Does not require a .gz suffix.
+# $1:       Path to a image file.
 #
-# stdout:   Path to the unzipped file.
+# stdout:   Path to the root directory.
 #
-unzip_to_temp() {
+mount_to_temp() {
     param_count 1 $#
     local file_path; file_path="$1"
 
-    local decompressed_path
-    decompressed_path="${temp_dir}/$(basename "$file_path")"
+    local mount_path
+    mount_path="${temp_dir}/$(basename "$file_path")"
 
     # Perform some checks
-    if [[ "$file_path" == "$decompressed_path" ]]; then
-        echo "Error: we are decompressing to the same path as we are reading from." >&2
+    if [[ ! -f "$file_path" ]]; then
+        echo "Error: specified image path is not a file." >&2
         exit 1
-    elif [[ -e "$decompressed_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it." >&2
     fi
 
-    # Unzip to the temp location
-    cat "$file_path" | gzip -d > "$decompressed_path"
+    # Mount at the temp location
+    mkdir -p "$mount_path"
+    mount -o loop "$file_path" "$mount_path"
     
-    # Debug output: show size and location
-    echo "$decompressed_path"
+    # Output
+    echo "$mount_path"
 }
 
-# Add a file to a tar archive.
+# Copy a file into a mounted image.
 #
-# $1:       Path to the archive.
-#           Must be an unzipped .tar archive.
-#           Does not require .tar suffix.
-# $2:       Path to the file to add.
-# $3:       The path of the file, within the archive.
+# $1:       Path to the image mount directory.
+# $2:       Path to the file to copy.
+# $3:       The path of the file, within the filesystem.
 #           Includes file's name.
-#           Should not include special character '|'.
-#           Generally should not begin with '/', though tar autoremoves them.
+#           Does not need to begin with a /.
 #
 # stdout:   Debug logs.
 #
-add_file_to_archive() {
+add_file() {
     param_count 3 $#
-    local archive_path; archive_path="$1"
+    local mount_root; mount_root="$1"
     local file_path; file_path="$2"
     local file_dest_path; file_dest_path="$3"
 
     # Checks
-    # shellcheck disable=SC2076 # We are actually trying to match literal pipe char
-    if [[ "$file_dest_path" =~ '|' ]]; then
-        echo "Error: destination file path cannot contain special character '|'." >&2
+    if [[ ! -d "$mount_root" ]]; then
+        echo "Error: directory does not exist at path: $mount_root" >&2
         exit 1
     fi
-    if [[ ${file_dest_path:0:1} == '/' ]]; then
-        echo "Warning: destination file path begins in '/'. " \
-             "Files in tar archives are generally not absolute paths." >&2
+    if [[ ! -d "${mount_root}/usr" ]]; then
+        echo "Warning: mount point does not appear to be a Linux filesystem root" >&2
     fi
 
-    local sed_expression
-    sed_expression="s|.*|${file_dest_path}|"
-    sed_expression="${sed_expression}x" # for tar --transform,
-                                        # x flag indicates we are using
-                                        # extended regex (sed -E)
+    # Remove any trailing slash '/'
+    mount_root="${mount_root%/}"
+    # Remove any preceding slash '/'
+    file_dest_path="${file_dest_path#/}"
 
-    echo "Adding to tar archive ${archive_path}"
+    echo "Adding to filesystem root mounted at dir: ${mount_root}"
     echo "File source: ${file_path}"
-    echo "File destination: $(echo "$file_path" | sed -E "${sed_expression%x}")"
+    echo "File destination: /${file_dest_path}"
     echo "File contents (5 lines): "
     head -n 5 "${file_path}" | sed -e 's/^/| /'
 
-    if ( tar -tf "${archive_path}" | grep "$file_dest_path" > /dev/null ); then # grep -q would break pipe & then tar would fail
-        echo "Removing preexisting file at this path"
-        tar --delete -vf "$archive_path" "$file_dest_path"
-    fi
+    # Determine destination + ensure parent dir
+    local host_fs_file_dest_path
+    host_fs_file_dest_path="${mount_root}/${file_dest_path}"
+    mkdir -p "$(dirname "$host_fs_file_dest_path")"
 
-    # Note: tar --append does not remove an existing file with the same name.
-    tar --owner=root --group=root --mode=0755 \
-        -vf "$archive_path" \
-        --append "$file_path" \
-        --transform="$sed_expression" --show-transformed-names
+    if [[ -f "$host_fs_file_dest_path" ]]; then
+        echo "Replacing preexisting file at this path"
+    fi
+    cp "$file_path" "$host_fs_file_dest_path"
+    # these permissions are also set in the WSL image's build script
+    chmod 0755 "$host_fs_file_dest_path"
+    chown root:root "$host_fs_file_dest_path"
+
     echo "Done"
 }
 
-# Rezip a file with gzip to a destination path.
+# Unmount an image.
 #
-# $1:       Path to an unzipped file.
-# $2:       Path to rezip file to.
-#           Does not require a .gz suffix.
+# $1:       Path to the image mount directory.
 #
 # stdout:   Debug logs.
 #
-rezip_to_path() {
-    param_count 2 $#
-    local from_path; from_path="$1"
-    local dest_path; dest_path="$2"
-
-    # Perform some checks
-    if [[ "$from_path" == "$dest_path" ]]; then
-        echo "Error: we are compressing to the same path as we are reading from." >&2
-        exit 1
-    elif [[ -e "$dest_path" ]]; then
-        echo "Warning: file already exists at rezipped archive's path, replacing it." >&2
-    fi
+unmount() {
+    param_count 1 $#
+    local mount_path; mount_path="$1"
 
     # Rezip
-    cat "$from_path" | gzip --best > "$dest_path"
+    umount "$mount_path"
 }
 
-# Add files to a gzipped tar archive.
+# Add files to an .img image's filesystem (as a copy, not in-place).
 # 
 # stdin:    JSON object.
 #           Keys are filepaths on the current machine.
-#           Values are filepaths when inside the archive.
+#           Values are filepaths when inside the image.
 #
-# $1:       Path to the archive to add files to.
-# $2:       Where to create the new archive, including filename.
-#           Must be different from `archive_path`.
-#           The file created here will be gzipped.
+# $1:       Path to the image to add files to.
+# $2:       New path for the modified image.
 #
 # stdout:   Debug logs.
 #
 main() {
     param_count 2 $#
     local files_json; files_json="$cmdline_stdin"
-    local archive_path; archive_path="$1"
-    local modified_archive_path; modified_archive_path="$2"
+    local image_path; image_path="$1"
+    local dest_path; dest_path="$2"
 
-    # Unzip archive
-    local unzipped_path
-    echo "Unzipping default Ubuntu image..."
-    unzipped_path="$( unzip_to_temp "$archive_path" )"
+    # Copy to a new path
+    if [[ -e "$dest_path" ]]; then
+        echo "Warning: file already exists at this path, replacing it." >&2
+    fi
+    mkdir -p "$(dirname "$dest_path")"
+    cp "$image_path" "$dest_path"
+
+    # Mount archive
+    local mount_path
+    echo "Mounting default Ubuntu image..."
+    mount_path="$( mount_to_temp "$dest_path" )"
 
     # Add the files
     local -a keys vals; local count
@@ -182,12 +184,12 @@ main() {
     for (( i=0 ; i < count ; i++ )); do
         local file; file="${keys[$i]}"
         local path_in_archive; path_in_archive="${vals[$i]}"
-        add_file_to_archive "$unzipped_path" "$file" "$path_in_archive"
+        add_file "$mount_path" "$file" "$path_in_archive"
     done
 
-    # Rezip archive
-    echo "Rezipping image..."
-    rezip_to_path "$unzipped_path" "$modified_archive_path"
+    # Unmount archive
+    echo "Unmounting image..."
+    unmount "$mount_path"
 }
 
 # Call a function within this script:
