@@ -4,22 +4,15 @@ minimumLimaVersion: 1.1.0
 disk: 12GiB
 
 # Inherit defaults for Ubuntu at our desired version
+# (we do not actually use a custom image)
 base:
 - template://ubuntu-24.04 # points to data from template://_images/ and template://_default/
                           # see: https://github.com/lima-vm/lima/blob/master/templates/ubuntu-24.04.yaml
 
-# Provide custom images
-images:
-- location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img
-  arch: x86_64
-- location: https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-arm64.img
-  arch: aarch64
-
-# VM host interop config
+# We need specific guest-host interop abilities provided by Lima
 ssh:
   forwardX11: true # enable use of XQuartz
   forwardX11Trusted: true
-
 mounts:
 - location: "{{.GlobalTempDir}}/lima"
   mountPoint: /tmp/lima
@@ -27,13 +20,58 @@ mounts:
 - location: "{{.Home}}"
   writable: true
 
-# Allow lima to work with our injected cloud-init scripts
+# Below should mirror WSL's cloud-config behavior.
 user:
   name: itsc
   uid: 1000
   home: /home/{{.User}}
-
+  shell: /bin/bash
 provision:
+- # Allow non-root Docker access, just in case
+  mode: system
+  script: |
+    groupadd docker
+    usermod -aG docker itsc
+- # Install packages
+  mode: system
+  script: |
+    #!/bin/bash
+    set -x -o pipefail
+
+    SENTINEL="/.package_setup_occured"
+    if [[ -f "$SENTINEL" ]]; then
+      exit 0
+    fi
+
+    # Install apt packages
+    debconf-set-selections <<- EOF
+    	docker.io docker.io/restart boolean true
+    	wireshark-common wireshark-common/install-setuid boolean true
+    	EOF
+    apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io
+
+    # Install IMUNES
+    git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
+    cd /tmp/imunes_temp
+    sudo make install
+    cd /
+    rm -rf /tmp/imunes_temp
+    sudo imunes -p # probably won't work unless the system has been restarted since installing docker.io
+    
+    # include IMUNES templates in home directory
+    git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-templates
+
+    # ensure users have something to see when they test VS Code functionality
+    echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
+    chown itsc /home/itsc/.bash_history
+
+    # workaround for XQuartz interop issue
+    # see: https://github.com/lima-vm/lima/issues/989
+    echo '' >> /home/itsc/.profile
+    cat <<- 'EOF' >> /home/itsc/.profile
+    	# Run this in every login shell (some programs need it for X11 forwarding)
+    	export XAUTHORITY=$HOME/.Xauthority
+    	EOF
 
     # make the user set a password
     echo '' >> /home/itsc/.profile
@@ -52,16 +90,20 @@ provision:
       unset command
       unset sudo_is_nopasswd
     	EOF
+
+    # remember that we do not need to run this on subsequent boots
+    touch "$SENTINEL"
 probes:
 - mode: readiness
   description: IMUNES to be installed
   script: |
-     #!/bin/bash
-     set -eux -o pipefail
-     if ! timeout 60s bash -c "until command -v imunes; do sleep 3; done"; then
-       echo >&2 "IMUNES is not installed yet"
-       exit 1
-     fi
+    #!/bin/bash
+    set -x -o pipefail
+    timeout 60s bash -c "until command -v imunes; do sleep 3; done"
+    if [[ $? != 0 ]]; then
+      echo >&2 "IMUNES has still not been installed in guest"
+      exit 1
+    fi
   hint: |
     IMUNES was not installed in the guest. Make sure the package system is working correctly.
     Also see "/var/log/cloud-init-output.log" in the guest.

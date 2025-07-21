@@ -1,8 +1,0 @@
-{
-    "copy_runtime_files": {
-        "/cloud-init/99a_uncc_itsc_3146.cfg": "/etc/cloud/cloud.cfg.d/99a_uncc_itsc_3146.cfg",
-        "/cloud-init/vendor-data": "/etc/CCI/cloud-init/vendor-data",
-        "/cloud-init/user-data": "/etc/CCI/cloud-init/user-data",
-        "/cloud-init/meta-data": "/etc/CCI/cloud-init/meta-data"
-    }
-}
