@@ -68,9 +68,12 @@ install_instance() {
 
     # configure macOS Terminal
     echo "Adding instance as a profile in Terminal app..."
-    {   curl "${repo_url}/pub/profile.terminal" ||
+    {   
+        curl "${repo_url}/pub/profile.terminal" ||
         cat "${repo_url}/pub/profile.terminal" # if we're using a local path
-    } > "$HOME/Downloads/${instance_name}.terminal"
+    }   |
+        sed "s|/opt/homebrew/bin/limactl|$(which limactl)|g" \
+        > "$HOME/Downloads/${instance_name}.terminal"
     open "$HOME/Downloads/${instance_name}.terminal"
 }
 
