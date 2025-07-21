@@ -5,6 +5,7 @@ instance_name="ITSC-3146"
 # repo_url="/Users/ravirtualenvtest/Code/ITSC_3146_Lima"
 repo_url="https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main"
 
+# Returns 0 if the command specified with $? was found in $PATH.
 command_available() {
     /usr/bin/env which -s $1
 }
