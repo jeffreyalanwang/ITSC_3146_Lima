@@ -269,6 +269,8 @@ main() {
     echo '"'
 }
 
+# TODO assert the correct version of yq (go version, for support for filter())
+
 # Call a function within this script:
 #
 # $ ./add_archive_file.sh function_name arg_1 arg_2 ...

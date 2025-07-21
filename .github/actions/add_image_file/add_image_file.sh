@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ^ Equivalent to /bin/bash or whatever `PATH` would choose,
 #   for Mac systems which require Homebrew-installed bash (see below regarding readarray).
-
 set -e -o pipefail
 
 # Ensure our bash supports readarray.
@@ -75,7 +74,7 @@ mount_to_temp() {
 
     # Mount at the temp location
     mkdir -p "$mount_path"
-    mount -o loop "$file_path" "$mount_path"
+    guestmount -a "$file_path" -i --rw "$mount_path"
     
     # Output
     echo "$mount_path"
@@ -144,7 +143,7 @@ unmount() {
     local mount_path; mount_path="$1"
 
     # Rezip
-    umount "$mount_path"
+    guestunmount "$mount_path"
 }
 
 # Add files to an .img image's filesystem (as a copy, not in-place).
@@ -173,7 +172,7 @@ main() {
 
     # Mount archive
     local mount_path
-    echo "Mounting default Ubuntu image..."
+    echo "Mounting image for modification..."
     mount_path="$( mount_to_temp "$dest_path" )"
 
     # Add the files
@@ -191,6 +190,8 @@ main() {
     echo "Unmounting image..."
     unmount "$mount_path"
 }
+
+# TODO check for guestmount
 
 # Call a function within this script:
 #
