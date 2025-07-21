@@ -62,8 +62,10 @@ install_instance() {
 
     # configure macOS Terminal
     echo "Adding instance as a profile in Terminal app..."
-    curl "${repo_url}/pub/profile.terminal" > "~/Downloads/${instance_name}.terminal"
-    open "~/Downloads/${instance_name}.terminal"
+    {   curl "${repo_url}/pub/profile.terminal" ||
+        cat "${repo_url}/pub/profile.terminal" # if we're using a local path
+    } > "$HOME/Downloads/${instance_name}.terminal"
+    open "$HOME/Downloads/${instance_name}.terminal"
 }
 
 environment_setup
