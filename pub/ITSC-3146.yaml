@@ -34,9 +34,24 @@ user:
   home: /home/{{.User}}
 
 provision:
-- mode: system
-  file: /etc/CCI/lima/lima-oobe-itsc.sh
 
+    # make the user set a password
+    echo '' >> /home/itsc/.profile
+    cat <<- 'EOF' >> /home/itsc/.profile
+    	# make the user set a password for use with sudo
+      sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
+    	if ("$sudo_is_nopasswd" == 'true'); then
+    	  sudo passwd $(whoami) && {              # '&&' ensures password WAS changed before doing the following
+    	    rule="$(whoami)	ALL=(ALL:ALL) ALL"    # disable NOPASSWD
+    	    visudo -cqf <(echo "$rule") &&        # check our rule with visudo
+          command="echo '$rule' > /etc/sudoers.d/95-ITSC-3146"
+          sudo su -c "$command"                 # write the rule, overriding cloud-init's generated rule
+        }
+    	fi
+      unset rule
+      unset command
+      unset sudo_is_nopasswd
+    	EOF
 probes:
 - mode: readiness
   description: IMUNES to be installed
