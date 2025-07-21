@@ -49,6 +49,9 @@ environment_setup() {
 }
 
 install_instance() {
+    # make sure xquartz is running
+    xquartz &
+
     # create image
     echo "Create Lima instance ${instance_name}..."
     limactl create --tty=false "${repo_url}/pub/${instance_name}.yaml"
@@ -56,7 +59,7 @@ install_instance() {
     # configure host SSH
     echo "Adding instance SSH config to ~/.ssh/config..."
     mkdir -p ~/.ssh
-    if [[ -f ~/.ssh/config ]] && ( ! grep -q '^Include ~/.lima' ~/.ssh/config ); then
+    if [[ ! -f ~/.ssh/config ]] || ( ! grep -q '^Include ~/.lima' ~/.ssh/config ); then
         echo '' >> ~/.ssh/config # newline
         echo '# Lima instances' >> ~/.ssh/config
         echo "# (this line created by ${instance_name} setup.sh)" >> ~/.ssh/config
