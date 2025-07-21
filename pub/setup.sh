@@ -56,7 +56,7 @@ install_instance() {
     # configure host SSH
     echo "Adding instance SSH config to ~/.ssh/config..."
     mkdir -p ~/.ssh
-    if [[ -f ~/.ssh/config ]] && [[ ! grep -q '^Include ~/.lima' -f ~/.ssh/config ]]; then
+    if [[ -f ~/.ssh/config ]] && ( ! grep -q '^Include ~/.lima' -f ~/.ssh/config ); then
         echo '' >> ~/.ssh/config # newline
         echo '# Lima instances' >> ~/.ssh/config
         echo "# (this line created by ${instance_name} setup.sh)" >> ~/.ssh/config
