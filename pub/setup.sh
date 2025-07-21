@@ -2,6 +2,7 @@
 set -e -o pipefail
 
 instance_name="ITSC-3146"
+# repo_url="/Users/ravirtualenvtest/Code/ITSC_3146_Lima"
 repo_url="https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main"
 
 command_available() {
