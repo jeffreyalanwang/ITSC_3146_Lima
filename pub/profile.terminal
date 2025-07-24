@@ -1,3 +1,13 @@
+<!--
+
+profile.terminal
+
+Can open on macOS with 'open profile.terminal'/double-click,
+or by importing as a profile in the macOS Terminal app's settings.
+
+Once opened or imported, this file can be deleted.
+
+-->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

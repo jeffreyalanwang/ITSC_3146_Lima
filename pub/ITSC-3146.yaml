@@ -1,5 +1,16 @@
 minimumLimaVersion: 1.1.0
 
+# ITSC-3146.yaml
+#
+# Lima instance config
+#
+# Functions the same as cloud-config/vendor-data for WSL
+# (because Lima necessarily overrides cloud-config but its
+# config shares many of its keys).
+#
+# Format: limayaml (see below)
+# https://github.com/lima-vm/lima/blob/master/templates/default.yaml
+
 # VM hardware config
 disk: 12GiB
 
@@ -38,6 +49,8 @@ provision:
     #!/bin/bash
     set -x -o pipefail
 
+    # Unlike cloud-init, limayaml can only specify scripts
+    # which run on every boot
     SENTINEL="/.package_setup_occured"
     if [[ -f "$SENTINEL" ]]; then
       exit 0
@@ -53,19 +66,34 @@ provision:
     # Install IMUNES
     git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
     cd /tmp/imunes_temp
-    sudo make install
+    make install
     cd /
     rm -rf /tmp/imunes_temp
-    sudo imunes -p # probably won't work unless the system has been restarted since installing docker.io
+    imunes -p # probably won't work unless the system has been restarted since installing docker.io
     
-    # include IMUNES templates in home directory
+    # Include IMUNES templates in home directory
     git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-templates
 
-    # ensure users have something to see when they test VS Code functionality
+    # Remember that we do not need to run this on subsequent boots
+    touch "$SENTINEL"
+- # Modify .bash_history and .profile
+  mode: system
+  script: |
+    #!/bin/bash
+    set -x -o pipefail
+
+    # Unlike cloud-init, limayaml can only specify scripts
+    # which run on every boot
+    SENTINEL="/.shell_setup_occured"
+    if [[ -f "$SENTINEL" ]]; then
+      exit 0
+    fi
+
+    # Ensure users have something to see when they test VS Code functionality
     echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
     chown itsc /home/itsc/.bash_history
 
-    # workaround for XQuartz interop issue
+    # Workaround for XQuartz interop issue
     # see: https://github.com/lima-vm/lima/issues/989
     echo '' >> /home/itsc/.profile
     cat <<- 'EOF' >> /home/itsc/.profile
@@ -73,7 +101,7 @@ provision:
     	export XAUTHORITY=$HOME/.Xauthority
     	EOF
 
-    # make the user set a password
+    # Make the user set a password
     echo '' >> /home/itsc/.profile
     cat <<- 'EOF' >> /home/itsc/.profile
     	# make the user set a password for use with sudo
@@ -91,7 +119,7 @@ provision:
       unset sudo_is_nopasswd
     	EOF
 
-    # remember that we do not need to run this on subsequent boots
+    # Remember that we do not need to run this on subsequent boots
     touch "$SENTINEL"
 probes:
 - mode: readiness

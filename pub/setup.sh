@@ -1,6 +1,21 @@
 #!/bin/bash
 set -e -o pipefail
 
+# setup.sh
+#
+# Environment setup (install required packages) and Lima instance
+# configuration.
+# Other files in this repository are automatically downloaded
+# and provided where they are needed, using curl or limayaml's
+# ability to retrieve file contents from a URL.
+#
+# Run using the command:
+#   curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/ITSC-3146.yaml' | bash
+#
+# Alternatively, download this file, change permissions, then run:
+#   chmod +x $FILE
+#   bash $FILE
+
 instance_name="ITSC-3146"
 # repo_url="/Users/ravirtualenvtest/Code/ITSC_3146_Lima"
 repo_url="https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main"
@@ -61,9 +76,11 @@ install_instance() {
     mkdir -p ~/.ssh
     if [[ ! -f ~/.ssh/config ]] || ( ! grep -q '^Include ~/.lima' ~/.ssh/config ); then
         echo '' >> ~/.ssh/config # newline
-        echo '# Lima instances' >> ~/.ssh/config
-        echo "# (this line created by ${instance_name} setup.sh)" >> ~/.ssh/config
-        echo 'Include ~/.lima/*/ssh.config' >> ~/.ssh/config
+        {
+            echo '# Lima instances'
+            echo "# (this line created by ${instance_name} setup.sh)"
+            echo 'Include ~/.lima/*/ssh.config' >> ~/.ssh/config
+        } >> ~/.ssh/config
     fi
 
     # configure macOS Terminal
