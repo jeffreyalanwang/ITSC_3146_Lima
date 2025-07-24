@@ -66,6 +66,8 @@ provision:
     apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io samba
 
     # Apply samba config
+    echo 'include = /etc/samba/smb.conf.d/96_share_to_host.conf' >> /etc/samba/smb.conf
+    smbpasswd -a itsc
     service smbd restart
 
     # Install IMUNES
