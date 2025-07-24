@@ -30,6 +30,8 @@ mounts:
   writable: true
 - location: "{{.Home}}"
   writable: true
+networks:
+- vzNAT: true
 
 # Below should mirror WSL's cloud-config behavior.
 user:
@@ -61,7 +63,10 @@ provision:
     	docker.io docker.io/restart boolean true
     	wireshark-common wireshark-common/install-setuid boolean true
     	EOF
-    apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io
+    apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io samba
+
+    # Apply samba config
+    service smbd restart
 
     # Install IMUNES
     git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
@@ -121,6 +126,14 @@ provision:
 
     # Remember that we do not need to run this on subsequent boots
     touch "$SENTINEL"
+- # samba config to access guest fs from host
+  mode: data
+  path: /etc/samba/smb.conf.d/96_share_to_host.conf
+  owner: "root:root"
+  permissions: 644
+  overwrite: true
+  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/smb.conf
+
 probes:
 - mode: readiness
   description: IMUNES to be installed
