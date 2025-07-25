@@ -118,7 +118,7 @@ install_instance() {
         curl "${repo_url}/pub/profile.terminal" ||
         cat "${repo_url}/pub/profile.terminal" # if we're using a local path
     }   |
-        sed "s|/opt/homebrew/bin/limactl|$(which limactl)|g" \
+        sed "s|LIMACTL_EXECUTABLE|$(which limactl)|g" \
         > "$HOME/Downloads/${instance_name}.terminal"
     open "$HOME/Downloads/${instance_name}.terminal"
 }

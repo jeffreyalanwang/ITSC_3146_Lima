@@ -15,7 +15,7 @@ Once opened or imported, this file can be deleted.
 	<key>Bell</key>
 	<false/>
 	<key>CommandString</key>
-	<string>/opt/homebrew/bin/limactl shell ITSC-3146</string>
+	<string>/usr/bin/env LIMACTL_EXECUTABLE shell ITSC-3146</string>
 	<key>EnableSmoothResizing</key>
 	<true/>
 	<key>Font</key>
