@@ -84,11 +84,21 @@ install_instance() {
             DISPLAY=':0'
         }
     fi
+    echo 'Providing Lima the $DISPLAY value of: '"${DISPLAY}"
     export DISPLAY
 
-    # create image
+    # create instance
     echo "Create Lima instance ${instance_name}..."
     limactl create --tty=false "${repo_url}/pub/${instance_name}.yaml"
+
+    # start instance
+    #
+    # When setting up macOS Terminal profile, we open a Lima
+    # shell; the open command means that the new Terminal 
+    # window is not a child of this one.
+    # By performing startup in advance, we use the environment
+    # variables from this shell instead.)
+    limactl start "${instance_name}"
 
     # configure host SSH
     echo "Adding instance SSH config to ~/.ssh/config..."
@@ -102,7 +112,7 @@ install_instance() {
         } >> ~/.ssh/config
     fi
 
-    # configure macOS Terminal
+    # configure macOS Terminal + open for user to setup password
     echo "Adding instance as a profile in Terminal app..."
     {   
         curl "${repo_url}/pub/profile.terminal" ||
