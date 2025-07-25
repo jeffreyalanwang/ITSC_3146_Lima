@@ -65,7 +65,26 @@ environment_setup() {
 
 install_instance() {
     # make sure xquartz is running
-    xquartz &
+    if [[ -z "$DISPLAY" ]]; then
+        {
+            # Ask launchctl to start a socket for xquartz;
+            # xquartz is autostarted when this socket is connected to.
+            launchctl bootstrap "gui/$(id -u)" /Library/LaunchAgents/org.xquartz.startx.plist
+            # Because launchctl output is subject to change,
+            # this is our best option to extract the socket path
+            DISPLAY="$(
+                launchctl print "gui/$(id -u)/org.xquartz.startx" | 
+                grep -o '/private/tmp/.*/org.xquartz:0' | head -n 1
+            )"
+        } || {
+            # If any of the above returned with error,
+            # use the trusty /tmp/.X11-unix/X0 socket
+            # (which does not auto-start xquartz when connected to)
+            xquartz &
+            DISPLAY=':0'
+        }
+    fi
+    export DISPLAY
 
     # create image
     echo "Create Lima instance ${instance_name}..."
