@@ -67,8 +67,11 @@ provision:
 
     # Apply samba config
     echo 'include = /etc/samba/smb.conf.d/96_share_to_host.conf' >> /etc/samba/smb.conf
-    smbpasswd -a itsc
     service smbd restart
+    { # samba password is blank
+      echo # New password:
+      echo # Confirm new password:
+    } | smbpasswd -a -s itsc # -s allows smbpasswd to read prompts from stdin
 
     # Install IMUNES
     git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/

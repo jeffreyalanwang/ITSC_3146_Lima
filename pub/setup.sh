@@ -84,7 +84,7 @@ install_instance() {
             DISPLAY=':0'
         }
     fi
-    echo 'Providing Lima the $DISPLAY value of: '"${DISPLAY}"
+    echo "Providing Lima the \$DISPLAY value of: ${DISPLAY}"
     export DISPLAY
 
     # create instance
