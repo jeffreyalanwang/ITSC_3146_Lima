@@ -117,7 +117,7 @@ provision:
     sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
     if ("$sudo_is_nopasswd" == 'true'); then
       sudo passwd $(whoami) && {              # '&&' ensures password WAS changed before doing the following
-        rule="$(cat <<- 'EOF_sudoers'
+        rule="$(cat <<- EOF_sudoers
     			$(whoami)	ALL=(ALL:ALL) ALL         # disable NOPASSWD
     			$(whoami)	ALL=(ALL:ALL) NOPASSWD:/usr/bin/diff
     			                                    # but keep NOPASSWD for this one command that Lima needs to run during boot
