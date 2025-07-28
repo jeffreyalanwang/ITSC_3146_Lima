@@ -45,6 +45,10 @@ provision:
   script: |
     groupadd docker
     usermod -aG docker itsc
+- # Undo Lima's cloud-init config locking the user password
+  mode: system
+  script: |
+    passwd -u itsc
 - # Install packages
   mode: system
   script: |
