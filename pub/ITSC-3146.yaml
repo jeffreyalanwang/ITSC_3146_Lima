@@ -113,7 +113,6 @@ provision:
 
     # Make the user set a password
     cat << 'EOF_profile' >> /home/itsc/.profile
-		
     # make the user set a password for use with sudo
     sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
     if ("$sudo_is_nopasswd" == 'true'); then
@@ -131,7 +130,7 @@ provision:
       }
     fi
     unset rule command sudo_is_nopasswd
-		EOF_profile
+    EOF_profile
 
     # Remember that we do not need to run this on subsequent boots
     touch "$SENTINEL"
