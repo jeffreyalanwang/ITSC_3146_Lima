@@ -144,7 +144,7 @@ provision:
   owner: "root:root"
   permissions: 644
   overwrite: true
-  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/smb.conf
+  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/smb.conf
 
 probes:
 - mode: readiness

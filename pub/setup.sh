@@ -89,7 +89,7 @@ install_instance() {
 
     # create instance
     echo "Create Lima instance ${instance_name}..."
-    limactl create --tty=false "${repo_url}/pub/${instance_name}.yaml"
+    limactl create --tty=false "${repo_url}/host/${instance_name}.yaml"
 
     # start instance
     #
@@ -115,8 +115,8 @@ install_instance() {
     # configure macOS Terminal + open for user to setup password
     echo "Adding instance as a profile in Terminal app..."
     {   
-        curl "${repo_url}/pub/profile.terminal" ||
-        cat "${repo_url}/pub/profile.terminal" # if we're using a local path
+        curl "${repo_url}/host/profile.terminal" ||
+        cat "${repo_url}/host/profile.terminal" # if we're using a local path
     }   |
         sed "s|LIMACTL_EXECUTABLE|$(which limactl)|g" \
         > "$HOME/Downloads/${instance_name}.terminal"
