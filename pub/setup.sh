@@ -112,6 +112,10 @@ install_instance() {
         } >> ~/.ssh/config
     fi
 
+    # configure instance to run in background on login
+    # (allowing VS Code + Finder toaccess)
+    limactl start-at-login --tty=false ${instance_name}
+
     # configure macOS Terminal + open for user to setup password
     echo "Adding instance as a profile in Terminal app..."
     {   
