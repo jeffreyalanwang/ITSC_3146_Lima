@@ -14,7 +14,7 @@ Run `setup.sh`:
 `curl https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/uninstall.sh | bash`
 
 ## Linux users
-`setup.sh` will not work for you, but if you install Lima on your own, you should be able to download [ITSC-3146.yaml](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/ITSC-3146.yaml) and load it into Lima yourself.
+`setup.sh` will not work for you, but if you install Lima on your own, you should be able to download [ITSC-3146.yaml](/host/ITSC-3146.yaml) and load it into Lima yourself.
 
 * You will need to remove the following line:
   
@@ -25,17 +25,17 @@ Run `setup.sh`:
   `- lima: user-v2`
 
 ## Mechanics
-Files in [/host/](https://github.com/jeffreyalanwang/ITSC_3146_Lima/tree/main/host) are retrieved for use by software running in the host (i.e. macOS) OS, and files in [/guest/](https://github.com/jeffreyalanwang/ITSC_3146_Lima/tree/main/guest) are required to be placed in the guest (Ubuntu) OS.
+Files in [/host/](/host/) are retrieved for use by software running in the host (i.e. macOS) OS, and files in [/guest/](/guest/) are required in the guest (Ubuntu) OS.
 
 ### Install script
 **`setup.sh`** installs `homebrew`, and uses it to install the following packages if not present on the system: `XQuartz`, `Visual Studio Code`, `Lima`
 
-The script ensures that XQuartz is registered with `launchd`, creates the Lima instance, then adds an entry in `~/.ssh/config`, sets it to start at login, and finally downloads and opens the [`profile.terminal`](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/profile.terminal) file to register it with the Terminal app.
+The script ensures that XQuartz is registered with `launchd`, creates the Lima instance, then adds an entry in `~/.ssh/config`, sets it to start at login, and finally downloads and opens the [`profile.terminal`](/host/profile.terminal) file to register it with the Terminal app.
 
 **`uninstall.sh`** removes the Lima instance, then deletes any applications and files resulting from `setup.sh` that are no longer desired by the user.
 
 ### macOS Terminal
-[`profile.terminal`](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/profile.terminal) is imported into its associated application with the `open` command.
+[`profile.terminal`](/host/profile.terminal) is imported into its associated application with the `open` command.
 
 The macOS Terminal precedes profile shell executables with a hyphen to indicate that they are login shells. This causes internal issues within `limactl`. As a result, we indirectly call `limactl` using `/usr/bin/env`.
 
@@ -48,11 +48,11 @@ Unlike in WSL:
 
 As a result, we have Lima download a plain Ubuntu image with no modifications.
 
-During install, cloud-init options are indirectly generated, and guest OS config files are copied in, using the instance's [limayaml config](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/ITSC-3146.yaml).
+During install, cloud-init options are indirectly generated, and guest OS config files are copied in, using the instance's [limayaml config](/host/ITSC-3146.yaml).
 
 ### X11 applications
 #### X11 forwarding
-X11 forwarding is enabled in the instance's [limayaml config](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/ITSC-3146.yaml). Trusted X11 forwarding is also enabled, to avoid issues such as [connection timeout](https://github.com/lima-vm/lima/issues/2099). Note that Debian-based ssh clients already default to trusted X11 forwarding, but not macOS clients.
+X11 forwarding is enabled in the instance's [limayaml config](/host/ITSC-3146.yaml). Trusted X11 forwarding is also enabled, to avoid issues such as [connection timeout](https://github.com/lima-vm/lima/issues/2099). Note that Debian-based ssh clients already default to trusted X11 forwarding, but not macOS clients.
 
 Lima instances create one SSH connection, which is shared for use across all SSH shells and forwarded sockets with that VM instance. As a result, SSH forwards guest X11 traffic to whatever `$DISPLAY` was set to at SSH connection (i.e. instance restart) time. To reset X11 forwarding or change the host `$DISPLAY` value, use `limactl restart`. You can also kill all running `ssh` processes and start a new SSH shell.
 
@@ -69,12 +69,12 @@ VS Code is able to read saved SSH hosts (including our Lima VM) from `~/.ssh/con
 We start the Lima instance at login time using `limactl start-at-login` so that this SSH connection, as well as SMB file sharing (see [below](#file-access-from-host)), are always accessible.
 
 ### File access from guest
-We configure read-write access to the user's host home directory in the `mounts` section of the [limayaml config](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/ITSC-3146.yaml). macOS host users are mounted in the guest at the same path (e.g. `/Users/accountname`).
+We configure read-write access to the user's host home directory in the `mounts` section of the [limayaml config](/host/ITSC-3146.yaml). macOS host users are mounted in the guest at the same path (e.g. `/Users/accountname`).
 
 At runtime, `/tmp/lima` may also be available in both guest and host systems for use as a temporary shared folder.
 
 ### File access from host
-In the guest, [Samba is configured](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/guest/smb.conf) to be network-discoverable, with
+In the guest, [Samba is configured](/guest/smb.conf) to be network-discoverable, with
 * a read-only root directory share: `ITSC-3146-root`
 * a read-write share of `/home/itsc`: `ITSC-3146-home`
 
@@ -90,6 +90,6 @@ Note: Samba does not have built-in support for smb.conf.d, so files in that dire
 
 The host network is not provided network access to the guest by Lima's defaults.
 
-In the `networks` section of its [limayaml config](https://github.com/jeffreyalanwang/ITSC_3146_Lima/blob/main/host/ITSC-3146.yaml), we set the instance to use vzNAT, which relies on Apple's macOS Virtualization framework to access the Lima instance at the hostname `lima-itsc-3146` (non-case sensitive), or at the IP address assigned to the instance's `lima0` network interface.
+In the `networks` section of its [limayaml config](/host/ITSC-3146.yaml), we set the instance to use vzNAT, which relies on Apple's macOS Virtualization framework to access the Lima instance at the hostname `lima-itsc-3146` (non-case sensitive), or at the IP address assigned to the instance's `lima0` network interface.
 
 For Linux users, the alternative would be [user-v2](https://lima-vm.io/docs/config/network/user-v2/).
