@@ -22,7 +22,7 @@ repo_url="https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/
 
 # Returns 0 if the command specified with $? was found in $PATH.
 command_available() {
-    /usr/bin/env which -s $1
+    /usr/bin/env which -s "$1"
 }
 
 environment_setup() {
@@ -113,7 +113,7 @@ install_instance() {
     fi
 
     # configure instance to run in background on login
-    # (allowing VS Code + Finder toaccess)
+    # (allowing VS Code + Finder to access)
     limactl start-at-login --tty=false ${instance_name}
 
     # configure macOS Terminal + open for user to setup password
