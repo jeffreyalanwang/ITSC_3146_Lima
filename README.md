@@ -61,6 +61,11 @@ On the host, XQuartz makes a `$DISPLAY` socket available at `:0` (`/tmp/.X11_uni
 
 We prefer to use the `launchd` socket for our `$DISPLAY` value, because if XQuartz is not running, `launchd` monitors the socket and starts XQuartz automatically. To avoid requiring logout, `setup.sh` starts `/Library/LaunchAgents/org.xquartz.startx.plist` manually and then searches for the resulting socket.
 
+#### Copy/paste
+XQuartz is configured by default to remap **Command**+**C** to X11 copy, as well as clipboard sync.
+
+Pasting is configured in [.Xdefaults](/guest/Xdefaults) (which is symlinked to root user's home directory as well), so that **Command**+**V** maps to paste in applications like XTerm. However, in Tk/Tcl apps like IMUNES, you will still have to use **Control**+**V** instead.
+
 ### VS Code editing
 We take advantage of Lima's persistent SSH connection to use VS Code's Remote Development feature.
 

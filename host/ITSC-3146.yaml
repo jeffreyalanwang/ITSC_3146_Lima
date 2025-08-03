@@ -145,6 +145,15 @@ provision:
   permissions: 644
   overwrite: true
   file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/smb.conf
+- # clipboard interop
+  mode: data
+  path: /home/itsc/.Xdefaults
+  owner: "itsc:itsc"
+  permissions: 664
+  overwrite: true
+  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/Xdefaults
+- mode: system
+  script: ln -s /home/itsc/.Xdefaults /root/.Xdefaults
 
 probes:
 - mode: readiness
