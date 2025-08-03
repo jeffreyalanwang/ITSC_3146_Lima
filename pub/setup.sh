@@ -10,7 +10,7 @@ set -e -o pipefail
 # ability to retrieve file contents from a URL.
 #
 # Run using the command:
-#   curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/ITSC-3146.yaml' | bash
+#   curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/setup.sh' | bash
 #
 # Alternatively, download this file, change permissions, then run:
 #   chmod +x $FILE
