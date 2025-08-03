@@ -53,7 +53,9 @@ environment_setup() {
     fi
 
     # Install vscode, if not present
-    if ! (command_available "code") && ! (ls "/Applications/" | grep -q "Visual Studio Code"); then
+    if ! (command_available "code") &&
+       ! (find /Applications | grep "Visual Studio Code" >/dev/null)
+    then
         echo "Installing Visual Studio Code..."
         brew install --cask visual-studio-code
     else
