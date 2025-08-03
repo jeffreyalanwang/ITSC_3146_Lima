@@ -66,6 +66,10 @@ XQuartz is configured by default to remap **Command**+**C** to X11 copy, as well
 
 Pasting is configured in [.Xdefaults](/guest/Xdefaults) (which is symlinked to root user's home directory as well), so that **Command**+**V** maps to paste in applications like XTerm. However, in Tk/Tcl apps like IMUNES, you will still have to use **Control**+**V** instead.
 
+### IMUNES installation
+We currently install IMUNES from a mirror with a few bugfixes required for this course at:
+https://github.com/jeffreyalanwang/imunes
+
 ### VS Code editing
 We take advantage of Lima's persistent SSH connection to use VS Code's Remote Development feature.
 
