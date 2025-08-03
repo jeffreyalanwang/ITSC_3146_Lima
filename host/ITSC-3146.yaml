@@ -86,7 +86,7 @@ provision:
     imunes -p # probably won't work unless the system has been restarted since installing docker.io
     
     # Include IMUNES templates in home directory
-    git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-templates
+    git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-examples
 
     # Remember that we do not need to run this on subsequent boots
     touch "$SENTINEL"
