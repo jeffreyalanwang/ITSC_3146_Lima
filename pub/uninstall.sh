@@ -9,7 +9,7 @@
 # for other reasons, so they are prompted before removal.
 #
 # Run using the command:
-#   curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/uninstall.sh' | bash
+#   bash <(curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/uninstall.sh')
 #
 # Alternatively, download this file, change permissions, then run:
 #   chmod +x $FILE
@@ -72,11 +72,10 @@ undo_environment_setup() {
 
 undo_install_instance() {
 
-    # start-at-login
-    limactl start-at-login --tty=false ${instance_name} --enabled false
+    # start-at-login is removed during instance deletion
 
     # macOS Terminal profile
-    user_uninstalls+=("Uninstall Terminal profile: open Terminal -> settings -> ${INSTANCE_NAME} -> '-'")
+    user_uninstalls+=("Uninstall Terminal profile: open Terminal -> settings -> ${instance_name} -> '-'")
 
     # SSH hosts config
     local ssh_hosts_file; ssh_hosts_file="${HOME}/.ssh/config"
@@ -102,13 +101,15 @@ undo_install_instance() {
         # and it is accompanied by expected line1 and line3,
         # remove automatically.
         # Otherwise, let the user remove it.
-        if  [[ $( echo "$n2" | wc -l ) == 1 ]]      &&
-            (  sed -n "${n1}p" |
-                grep "$line1" >/dev/null        )   &&
-            (  sed -n "${n3}p" |
-                grep "$line3" >/dev/null        )
+        if  [[ $( echo "$n2" | wc -l | tr -d ' ' ) == 1 ]]  &&
+            (   cat "$ssh_hosts_file"       |
+                sed -n "${n1}p"             |
+                grep "$line1" >/dev/null        )           &&
+            (   cat "$ssh_hosts_file"       |
+                sed -n "${n3}p"             |
+                grep -F "$line3" >/dev/null        )
         then
-            sed -i "${n1},${n3}d" "$ssh_hosts_file"
+            sed -i '' "${n1}d;${n2}d;${n3}d" "$ssh_hosts_file"
             echo "Successfully removed."
         else
             echo "Could not automatically remove."
@@ -119,11 +120,11 @@ undo_install_instance() {
     limactl stop ${instance_name}
     limactl delete ${instance_name}
     
-    lima_data_dir=${LIMA_HOME}
+    lima_data_dir="${HOME}/.lima"
     if prompt "Do you want to completely remove Lima (including data and config in $lima_data_dir)?"; then
         remove_lima="true" # global
         echo "Deleting $lima_data_dir..."
-        rm "$lima_data_dir"
+        rm -r "$lima_data_dir"
     fi
 }
 

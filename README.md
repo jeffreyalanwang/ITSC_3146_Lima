@@ -11,7 +11,9 @@ Run `setup.sh`:
 **Full installation instructions & Getting Started:** [Google Doc](https://docs.google.com/document/d/1cVBNAIqBanecqzs8SjHQX2mCBXuv-sqH/edit?usp=sharing&ouid=103252777093034404109&rtpof=true&sd=true)
 
 ### Uninstall
-`curl https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/uninstall.sh | bash`
+`bash <(curl 'https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/pub/uninstall.sh')`
+
+This script requires slightly different syntax since it requires user prompting from stdin.
 
 ## Linux users
 `setup.sh` will not work for you, but if you install Lima on your own, you should be able to download [ITSC-3146.yaml](/host/ITSC-3146.yaml) and load it into Lima yourself.
