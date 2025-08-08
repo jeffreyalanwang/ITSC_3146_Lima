@@ -32,6 +32,23 @@ environment_setup() {
     if ! (command_available "brew"); then
         echo "Installing homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # Run the recommended post-install command per install
+        # script instructions
+
+        if [[ -d '/opt/homebrew' ]]; then
+            homebrew_prefix='/opt/homebrew'
+        elif [[ -d "${HOME}/.linuxbrew" ]]; then
+            homebrew_prefix="${HOME}/.linuxbrew"
+        else
+            homebrew_prefix='/usr/local'
+        fi
+        
+        local brew_exec homebrew_env_cmd
+        brew_exec="${homebrew_prefix}/bin/brew"
+        homebrew_env_cmd="eval \"\$(${brew_exec} shellenv)\""
+        echo "$homebrew_env_cmd" >> "${HOME}/.zprofile"
+        eval "$homebrew_env_cmd"
     else
         echo "Homebrew found at $(which "brew")."
     fi
