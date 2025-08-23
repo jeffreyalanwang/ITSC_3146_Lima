@@ -128,7 +128,7 @@ install_instance() {
         {
             echo '# Lima instances'
             echo "# (this line created by ${instance_name} setup.sh)"
-            echo 'Include ~/.lima/*/ssh.config' >> ~/.ssh/config
+            echo 'Include ~/.lima/*/ssh.config'
         } >> ~/.ssh/config
     fi
 
