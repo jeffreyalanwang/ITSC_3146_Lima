@@ -53,7 +53,7 @@ provision:
   mode: system
   script: |
     #!/bin/bash
-    set -x -o pipefail
+    set -e -x -o pipefail   # prevent sentinel if setup fails
 
     # Unlike cloud-init, limayaml can only specify scripts
     # which run on every boot
@@ -67,28 +67,37 @@ provision:
     	docker.io docker.io/restart boolean true
     	wireshark-common wireshark-common/install-setuid boolean true
     	EOF
+    apt update
     apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io samba
 
-    # Apply samba config
-    echo 'include = /etc/samba/smb.conf.d/96_share_to_host.conf' >> /etc/samba/smb.conf
-    service smbd restart
-    { # samba password is blank
-      echo # New password:
-      echo # Confirm new password:
-    } | smbpasswd -a -s itsc # -s allows smbpasswd to read prompts from stdin
+    # Configure samba
+    SENTINEL_SAMBA="/.samba_setup_occured"
+    if [[ -f "$SENTINEL_SAMBA" ]]; then
+      true
+    else
+      echo 'include = /etc/samba/smb.conf.d/96_share_to_host.conf' >> /etc/samba/smb.conf
+      service smbd restart
+      # Provide blank samba password
+      { echo                      # New password:
+        echo                      # Confirm new password:
+      } | smbpasswd -a -s itsc    # -s allows smbpasswd to read prompts from stdin
+      touch "$SENTINEL_SAMBA"
+    fi
 
     # Install IMUNES
+    rm -rf /tmp/imunes_temp
     git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
     cd /tmp/imunes_temp
     make install
     cd /
     rm -rf /tmp/imunes_temp
-    imunes -p # probably won't work unless the system has been restarted since installing docker.io
+    imunes -p || true           # probably won't work unless the system has
+                                # been restarted since installing docker.io
     
     # Include IMUNES templates in home directory
+    rm -rf /home/itsc/imunes-examples
     git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-examples
 
-    # Remember that we do not need to run this on subsequent boots
     touch "$SENTINEL"
 - # Modify .bash_history and .profile
   mode: system
