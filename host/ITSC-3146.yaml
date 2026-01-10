@@ -125,6 +125,7 @@ provision:
     	EOF
 
     # Make the user set a password
+    echo >> /home/itsc/.profile
     cat << 'EOF_profile' >> /home/itsc/.profile
     # make the user set a password for use with sudo
     sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
@@ -143,6 +144,14 @@ provision:
       }
     fi
     unset rule command sudo_is_nopasswd
+    EOF_profile
+
+    # Double-check package installation
+    echo >> /home/itsc/.profile
+    cat << 'EOF_profile' >> /home/itsc/.profile
+    if ! command -v imunes; then
+      echo 'Warning: IMUNES not installed. Try restarting to retry package installation.'
+    fi
     EOF_profile
 
     # Remember that we do not need to run this on subsequent boots
