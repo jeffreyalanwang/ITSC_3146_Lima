@@ -129,7 +129,7 @@ provision:
     cat << 'EOF_profile' >> /home/itsc/.profile
     # make the user set a password for use with sudo
     sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
-    if ("$sudo_is_nopasswd" == 'true'); then
+    if [[ "$sudo_is_nopasswd" == 'true' ]]; then
       sudo passwd $(whoami) && {              # '&&' ensures password WAS changed before doing the following
         rule="$(cat <<- EOF_sudoers
     			$(whoami)	ALL=(ALL:ALL) ALL         # disable NOPASSWD
