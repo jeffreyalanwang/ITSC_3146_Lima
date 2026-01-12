@@ -149,7 +149,7 @@ provision:
     # Double-check package installation
     echo >> /home/itsc/.profile
     cat << 'EOF_profile' >> /home/itsc/.profile
-    if ! command -v imunes; then
+    if ! ( command -v imunes ) >/dev/null; then
       echo 'Warning: IMUNES not installed. Try restarting to retry package installation.'
     fi
     EOF_profile
