@@ -123,11 +123,7 @@ install_instance() {
     echo "Create Lima instance ${instance_name}..."
     limactl create --tty=false "${repo_url}/host/${instance_name}.yaml"
 
-    # configure instance to run in background on login
-    # (allowing VS Code + Finder to access)
-    limactl start-at-login --tty=false ${instance_name}
-
-    # configure macOS Terminal + open for user to setup password
+    # configure macOS Terminal
     echo "Adding instance as a profile in Terminal app..."
     {
         curl "${repo_url}/host/profile.terminal" ||
@@ -135,7 +131,13 @@ install_instance() {
     }   |
         sed "s|LIMACTL_EXECUTABLE|$(which limactl)|g" \
         > "$HOME/Downloads/${instance_name}.terminal"
-    trap 'open "$HOME/Downloads/${instance_name}.terminal"' EXIT
+
+    # ensure traps if `limactl start` is interrupted
+    # 1) open macOS Terminal for user to setup password
+    # 2) configure instance to run in background on login (allowing VS Code + Finder to access)
+    trap1='limactl start-at-login --tty=false ${instance_name}'
+    trap2='open "$HOME/Downloads/${instance_name}.terminal"'
+    trap "$trap1 ; $trap2" EXIT
 
     # start instance
     #
