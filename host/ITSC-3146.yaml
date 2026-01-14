@@ -97,6 +97,7 @@ provision:
     # Include IMUNES templates in home directory
     rm -rf /home/itsc/imunes-examples
     git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-examples
+    git -C /home/itsc/imunes-examples checkout 8715a48a6ebc2257704e244e6b408f85352765d5
 
     touch "$SENTINEL"
 - # Modify .bash_history and .profile
