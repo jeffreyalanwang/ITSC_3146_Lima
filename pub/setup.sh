@@ -155,5 +155,4 @@ install_instance() {
     limactl start "${instance_name}"
 }
 
-environment_setup
-install_instance
+environment_setup && install_instance
