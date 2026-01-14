@@ -107,19 +107,6 @@ install_instance() {
     echo "Providing Lima the \$DISPLAY value of: ${DISPLAY}"
     export DISPLAY
 
-    # create instance
-    echo "Create Lima instance ${instance_name}..."
-    limactl create --tty=false "${repo_url}/host/${instance_name}.yaml"
-
-    # start instance
-    #
-    # When setting up macOS Terminal profile, we open a Lima
-    # shell; the open command means that the new Terminal 
-    # window is not a child of this one.
-    # By performing startup in advance, we use the environment
-    # variables from this shell instead.)
-    limactl start "${instance_name}"
-
     # configure host SSH
     echo "Adding instance SSH config to ~/.ssh/config..."
     mkdir -p ~/.ssh
@@ -132,19 +119,38 @@ install_instance() {
         } >> ~/.ssh/config
     fi
 
+    # create instance
+    echo "Create Lima instance ${instance_name}..."
+    limactl create --tty=false "${repo_url}/host/${instance_name}.yaml"
+
     # configure instance to run in background on login
     # (allowing VS Code + Finder to access)
     limactl start-at-login --tty=false ${instance_name}
 
     # configure macOS Terminal + open for user to setup password
     echo "Adding instance as a profile in Terminal app..."
-    {   
+    {
         curl "${repo_url}/host/profile.terminal" ||
         cat "${repo_url}/host/profile.terminal" # if we're using a local path
     }   |
         sed "s|LIMACTL_EXECUTABLE|$(which limactl)|g" \
         > "$HOME/Downloads/${instance_name}.terminal"
-    open "$HOME/Downloads/${instance_name}.terminal"
+    trap 'open "$HOME/Downloads/${instance_name}.terminal"' EXIT
+
+    # start instance
+    #
+    # When setting up macOS Terminal profile, we open a Lima
+    # shell; the open command means that the new Terminal 
+    # window is not a child of this one.
+    # By performing startup in advance, we use the environment
+    # variables from this shell instead.)
+    #
+    # Note:
+    # This runs slowly, and may be user-quit during execution
+    # without failing to install. As a result, further steps
+    # need to run even if the script is manually terminated
+    # by the user (i.e. using `trap`).
+    limactl start "${instance_name}"
 }
 
 environment_setup
