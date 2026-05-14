@@ -173,6 +173,13 @@ provision:
   file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/Xdefaults
 - mode: system
   script: ln -s /home/itsc/.Xdefaults /root/.Xdefaults
+- # Docker enable overlay2
+  mode: data
+  path: /etc/docker/daemon.conf
+  owner: "root:root"
+  permissions: 644
+  overwrite: true
+  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/docker_daemon.conf
 
 probes:
 - mode: readiness
