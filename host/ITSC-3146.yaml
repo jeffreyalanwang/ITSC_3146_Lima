@@ -175,7 +175,7 @@ provision:
   script: ln -s /home/itsc/.Xdefaults /root/.Xdefaults
 - # Docker enable overlay2
   mode: data
-  path: /etc/docker/daemon.conf
+  path: /etc/docker/daemon.json
   owner: "root:root"
   permissions: 644
   overwrite: true
