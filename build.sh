@@ -104,7 +104,7 @@ mount_image() {
 	sleep 3 							# qemu-nbd has some delay: https://gitlab.com/qemu-project/qemu/-/work_items/1413
 
 	mkdir -p "$mnt"
-	mount --label "cloudimg-rootfs" /dev/nbd0p4 "$mnt"
+	mount --label "cloudimg-rootfs" /dev/nbd0 "$mnt"
 }
 
 # Perform modifications on image as a live system.
