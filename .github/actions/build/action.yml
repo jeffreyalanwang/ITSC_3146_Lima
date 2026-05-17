@@ -11,7 +11,7 @@ runs:
     - name: Build images
       id: build_images
       shell: bash
-      run: ./build.sh
+      run: sudo bash ./build.sh
       working-directory: ./repo/
       # creates files in: ./repo/build/
 
