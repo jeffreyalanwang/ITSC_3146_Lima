@@ -20,6 +20,12 @@ base:
 - template://ubuntu-24.04 # points to data from template://_images/ and template://_default/
                           # see: https://github.com/lima-vm/lima/blob/master/templates/ubuntu-24.04.yaml
 
+images:
+- location: /Users/ec2-user/Desktop/new.img.gz
+  arch: x86_64
+- location: /Users/ec2-user/Desktop/new.img.gz
+  arch: aarch64
+
 # We need specific guest-host interop abilities provided by Lima
 ssh:
   forwardX11: true # enable use of XQuartz
@@ -36,162 +42,11 @@ networks:
 # Below should mirror WSL's cloud-config behavior.
 user:
   name: itsc
-  uid: 1000
+  uid: 1000                             # Set in chroot_operations.sh
   home: /home/{{.User}}
   shell: /bin/bash
 provision:
-- # Allow non-root Docker access, just in case
-  mode: system
-  script: |
-    groupadd docker
-    usermod -aG docker itsc
 - # Undo Lima's cloud-init config locking the user password
   mode: system
   script: |
     passwd -u itsc
-- # Install packages
-  mode: system
-  script: |
-    #!/bin/bash
-    set -e -x -o pipefail   # prevent sentinel if setup fails
-
-    # Unlike cloud-init, limayaml can only specify scripts
-    # which run on every boot
-    SENTINEL="/.package_setup_occured"
-    if [[ -f "$SENTINEL" ]]; then
-      exit 0
-    fi
-
-    # Install apt packages
-    debconf-set-selections <<- EOF
-    	docker.io docker.io/restart boolean true
-    	wireshark-common wireshark-common/install-setuid boolean true
-    	EOF
-    apt update
-    apt install -y g++ git tcl tcllib jq tk imagemagick xterm wireshark socat make docker.io samba
-
-    # Configure samba
-    SENTINEL_SAMBA="/.samba_setup_occured"
-    if [[ -f "$SENTINEL_SAMBA" ]]; then
-      true
-    else
-      echo 'include = /etc/samba/smb.conf.d/96_share_to_host.conf' >> /etc/samba/smb.conf
-      service smbd restart
-      # Provide blank samba password
-      { echo                      # New password:
-        echo                      # Confirm new password:
-      } | smbpasswd -a -s itsc    # -s allows smbpasswd to read prompts from stdin
-      touch "$SENTINEL_SAMBA"
-    fi
-
-    # Install IMUNES
-    rm -rf /tmp/imunes_temp
-    git clone https://github.com/jeffreyalanwang/imunes.git /tmp/imunes_temp/
-    cd /tmp/imunes_temp
-    make install
-    cd /
-    rm -rf /tmp/imunes_temp
-    imunes -p || true           # probably won't work unless the system has
-                                # been restarted since installing docker.io
-    
-    # Include IMUNES templates in home directory
-    rm -rf /home/itsc/imunes-examples
-    git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-examples
-    git -C /home/itsc/imunes-examples checkout 8715a48a6ebc2257704e244e6b408f85352765d5
-
-    touch "$SENTINEL"
-- # Modify .bash_history and .profile
-  mode: system
-  script: |
-    #!/bin/bash
-    set -x -o pipefail
-
-    # Unlike cloud-init, limayaml can only specify scripts
-    # which run on every boot
-    SENTINEL="/.shell_setup_occured"
-    if [[ -f "$SENTINEL" ]]; then
-      exit 0
-    fi
-
-    # Ensure users have something to see when they test VS Code functionality
-    echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
-    chown itsc /home/itsc/.bash_history
-
-    # Workaround for XQuartz interop issue
-    # see: https://github.com/lima-vm/lima/issues/989
-    echo '' >> /home/itsc/.profile
-    cat <<- 'EOF' >> /home/itsc/.profile
-    	# Run this in every login shell (some programs need it for X11 forwarding)
-    	export XAUTHORITY=$HOME/.Xauthority
-    	EOF
-
-    # Make the user set a password
-    echo >> /home/itsc/.profile
-    cat << 'EOF_profile' >> /home/itsc/.profile
-    # make the user set a password for use with sudo
-    sudo_is_nopasswd="$((sudo -n true 2>/dev/null) && echo 'true' || echo 'false')"
-    if [[ "$sudo_is_nopasswd" == 'true' ]]; then
-      sudo passwd $(whoami) && {              # '&&' ensures password WAS changed before doing the following
-        rule="$(cat <<- EOF_sudoers
-    			$(whoami)	ALL=(ALL:ALL) ALL         # disable NOPASSWD
-    			$(whoami)	ALL=(ALL:ALL) NOPASSWD:/usr/bin/diff
-    			                                    # but keep NOPASSWD for this one command that Lima needs to run during boot
-    			                                    # https://github.com/lima-vm/lima/blob/7a6078c455f33e535833b64fbd062b08a6b74916/pkg/hostagent/requirements.go#L137C1-L138C1
-    			EOF_sudoers
-        )"
-        visudo -cqf <(echo "$rule") &&        # check our rule with visudo
-        command="echo '$rule' > /etc/sudoers.d/95-ITSC-3146"
-        sudo su -c "$command"                 # write the rule, overriding cloud-init's generated rule
-      }
-    fi
-    unset rule command sudo_is_nopasswd
-    EOF_profile
-
-    # Double-check package installation
-    echo >> /home/itsc/.profile
-    cat << 'EOF_profile' >> /home/itsc/.profile
-    if ! ( command -v imunes ) >/dev/null; then
-      echo 'Warning: IMUNES not installed. Try restarting to retry package installation.'
-    fi
-    EOF_profile
-
-    # Remember that we do not need to run this on subsequent boots
-    touch "$SENTINEL"
-- # samba config to access guest fs from host
-  mode: data
-  path: /etc/samba/smb.conf.d/96_share_to_host.conf
-  owner: "root:root"
-  permissions: 644
-  overwrite: true
-  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/smb.conf
-- # clipboard interop
-  mode: data
-  path: /home/itsc/.Xdefaults
-  owner: "itsc:itsc"
-  permissions: 664
-  overwrite: true
-  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/Xdefaults
-- mode: system
-  script: ln -s /home/itsc/.Xdefaults /root/.Xdefaults
-- # Docker enable overlay2
-  mode: data
-  path: /etc/docker/daemon.json
-  owner: "root:root"
-  permissions: 644
-  overwrite: true
-  file: https://raw.githubusercontent.com/jeffreyalanwang/ITSC_3146_Lima/refs/heads/main/guest/docker_daemon.conf
-
-probes:
-- mode: readiness
-  description: IMUNES to be installed
-  script: |
-    #!/bin/bash
-    set -x -o pipefail
-    timeout 60s bash -c "until command -v imunes; do sleep 3; done"
-    if [[ $? != 0 ]]; then
-      echo >&2 "IMUNES has still not been installed in guest"
-      exit 1
-    fi
-  hint: |
-    IMUNES was not installed in the guest. Make sure the package system is working correctly.
-    Also see "/var/log/cloud-init-output.log" in the guest.
