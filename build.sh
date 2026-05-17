@@ -69,7 +69,9 @@ download_image() {
 # Create a larger copy of a QCOW2 image.
 #
 # Note: this operation will reorder partitions.
-# (Here, we move the rootfs from sda1 to sda3.)
+# (Here, we move the rootfs from sda1 to sda3 or sda4
+# --there are 4 total partitions on the Intel image, 
+# but 3 for ARM.)
 #
 # $1: Path of original image.
 # $2: Path to place enlarged copy.
@@ -88,7 +90,6 @@ expand_image() {
 # Mount a QCOW2 image.
 #
 # Caution: /dev/nbd0 must not yet be taken.
-# Caution: use `fdisk /dev/nbd0 -l` to make sure the rootfs is on partition 4.
 #
 # $1: Path to image.
 # $2: Path to desired mount point (directory or nonexistent).
@@ -103,7 +104,7 @@ mount_image() {
 	sleep 3 							# qemu-nbd has some delay: https://gitlab.com/qemu-project/qemu/-/work_items/1413
 
 	mkdir -p "$mnt"
-	mount /dev/nbd0p4 "$mnt"
+	mount --label "cloudimg-rootfs" /dev/nbd0p4 "$mnt"
 }
 
 # Perform modifications on image as a live system.
