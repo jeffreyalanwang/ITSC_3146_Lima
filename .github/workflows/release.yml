@@ -124,3 +124,26 @@ jobs:
       - name: Debug output
         if: always()
         uses: ./repo/.github/actions/debug_output
+
+  delete_release_if_fail:
+    runs-on: ubuntu-latest
+    needs:
+      - build_intel
+      - build_arm
+      - create_release
+      - attach_release_files
+    if: |
+      always() &&
+      ( contains(needs.*.result, 'failure') || 
+        contains(needs.*.result, 'cancelled') )
+    permissions:
+      contents: write # allow workflow to edit release
+    steps:
+      - name: Delete Release (if failure occurred)
+        uses: liudonghua123/delete-release-action@v1
+        with:
+          release_id: ${{ needs.create_release.outputs.release_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      upload_url: ${{ needs.create_release.outputs.upload_url }}
