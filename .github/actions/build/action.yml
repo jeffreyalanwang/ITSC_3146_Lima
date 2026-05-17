@@ -9,10 +9,8 @@ runs:
         path: ./repo/
 
     - name: Download required packages for build
-      uses: awalsh128/cache-apt-pkgs-action@latest
-      with:
-        packages: libguestfs-tools qemu-utils systemd-container
-        version: 1.0
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y libguestfs-tools qemu-utils systemd-container
 
 
     - name: Build images
