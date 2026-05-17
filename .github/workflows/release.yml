@@ -12,9 +12,14 @@ jobs:
   build_intel:
     runs-on: ubuntu-24.04
     steps:
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
+        with:
+          path: ./repo/
+
       - name: Build image
         id: build_image
-        uses: ./repo/.github/actions/debug_output
+        uses: ./repo/.github/actions/build
 
       - name: Debug output
         if: always()
@@ -26,9 +31,14 @@ jobs:
   build_arm:
     runs-on: ubuntu-24.04-arm
     steps:
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
+        with:
+          path: ./repo/
+
       - name: Build image
         id: build_image
-        uses: ./repo/.github/actions/debug_output
+        uses: ./repo/.github/actions/build
 
       - name: Debug output
         if: always()

@@ -1,0 +1,48 @@
+name: 'Build image'
+description: 'Build image for current machine architecture'
+runs:
+  using: "composite"
+  steps:
+    - name: Make the files in this commit available to the current directory
+      uses: actions/checkout@v4
+      with:
+        path: ./repo/
+
+    - name: Build images
+      id: build_images
+      shell: bash
+      run: ./build.sh
+      working-directory: ./repo/
+      # creates files in: ./repo/build/
+
+    - name: Pass artifacts to other jobs
+      id: upload_artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ./repo/build/
+        retention-days: 1
+      # outputs:
+      # artifact-id
+      # artifact-url
+      # artifact-digest
+
+    - name: Pass image filename to other jobs
+      id: list_images
+      shell: bash
+      run: |
+        filename="$( find $path        \
+                      -maxdepth 1      \
+                      -type f          \
+                      -printf '"%f"'   )"
+        echo "filename=$filename" >> "$GITHUB_OUTPUT"
+      env:
+        path: ./repo/build
+      # outputs:
+      # filename
+outputs:
+  artifact_id:
+    description: 'Artifact ID used to retrieve the built image later.'
+    value: ${{ steps.upload_artifact.outputs.artifact-id }}
+  filename: 
+    description: 'Filename for the built image.'
+    value: ${{ steps.list_images.outputs.filename }}
