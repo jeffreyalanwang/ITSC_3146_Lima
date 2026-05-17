@@ -236,7 +236,7 @@ main() {
 	
 	unmount_image "$image_mnt"
 
-	package_image "$tmp_image" "$(basename "$base_image").gz"
+	package_image "$tmp_image" "$(uname -m).img.gz" 		# Ubuntu: either x86_64 or aarch64 (filename passed on and used by limayaml)
 	delete_tmp	   # Removes anything still in $TMP_DIR
 }
 

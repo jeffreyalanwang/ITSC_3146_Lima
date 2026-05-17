@@ -21,9 +21,9 @@ base:
                           # see: https://github.com/lima-vm/lima/blob/master/templates/ubuntu-24.04.yaml
 
 images:
-- location: /Users/ec2-user/Desktop/new.img.gz
+- location: https://github.com/jeffreyalanwang/ITSC_3146_Lima/releases/latest/x86_64.img.gz
   arch: x86_64
-- location: /Users/ec2-user/Desktop/new.img.gz
+- location: https://github.com/jeffreyalanwang/ITSC_3146_Lima/releases/latest/aarch64.img.gz
   arch: aarch64
 
 # We need specific guest-host interop abilities provided by Lima
