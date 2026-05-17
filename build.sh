@@ -57,7 +57,7 @@ download_image() {
 	MD5SUMS="https://cloud-images.ubuntu.com/releases/noble/release/MD5SUMS"
 
 	if [[ ! -f "$(basename $IMAGE_URL)" ]]; then
-		wget "$IMAGE_URL"
+		wget "$IMAGE_URL" --no-verbose
 	fi
 	md5sum --status --check 								\
 		<(curl "$MD5SUMS" | grep "$(basename "$IMAGE_URL")")
