@@ -2,7 +2,7 @@
 ## Run as root. Observe cautions commented throughout script.
 set -eux -o pipefail
 
-apt install -y libguestfs-tools qemu-utils systemd-container
+# apt install libguestfs-tools qemu-utils systemd-container
 
 REPO_DIR="$(dirname "$(realpath "$0")")"
 cd "$REPO_DIR"
