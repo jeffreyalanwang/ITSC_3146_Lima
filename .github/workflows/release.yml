@@ -2,7 +2,7 @@ name: Build and release image
 
 on:
   push:
-    branches: [main]
+    branches: [main]                    # Main instead of release, because users access /pub directly on main branch
 
 defaults:
   run:
