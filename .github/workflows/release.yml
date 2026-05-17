@@ -1,0 +1,116 @@
+name: Build and release image
+
+on:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_intel:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Build image
+        id: build_image
+        uses: ./repo/.github/actions/debug_output
+
+      - name: Debug output
+        if: always()
+        uses: ./repo/.github/actions/debug_output
+    outputs:
+      artifact_id: ${{ steps.build_image.outputs.artifact-id }}
+      filename: ${{ steps.build_image.outputs.filename }}
+
+  build_arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Build image
+        id: build_image
+        uses: ./repo/.github/actions/debug_output
+
+      - name: Debug output
+        if: always()
+        uses: ./repo/.github/actions/debug_output
+    outputs:
+      artifact_id: ${{ steps.build_image.outputs.artifact-id }}
+      filename: ${{ steps.build_image.outputs.filename }}
+
+  create_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # allow workflow to create releases
+    steps:
+      - name: Create short version of commit SHA-1
+        id: truncated_sha
+        uses: 2428392/gh-truncate-string-action@v1
+        with:
+          stringToTruncate: ${{ github.sha }}
+          maxLength: 7
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_ID: v0.2.${{ steps.truncated_sha.outputs.string }}
+        with:
+          tag_name: ${{ env.VERSION_ID }}
+          release_name: Release ${{ env.VERSION_ID }}
+          draft: false
+          prerelease: false
+        # outputs:
+        # id: The release ID
+        # html_url: The URL users can navigate to in order to view the release.
+        # upload_url: The URL for uploading assets to the release.
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+
+  attach_release_files:
+    runs-on: ubuntu-latest
+    needs:
+      - build_intel
+      - build_arm
+      - create_release
+    permissions:
+      contents: write # allow workflow to edit release
+    steps:
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
+        with:
+          path: ./repo/
+
+      - name: Download artifact from build_images
+        id: get_artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: "${{ needs.build_intel.outputs.artifact_id }}, ${{needs.build_arm.outputs.artifact_id }}"
+          path: ~/images
+        # outputs:
+        # download-path
+
+      - name: Upload Release Files (1/2)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ${{ format('{0}/artifact/', steps.get_artifact.outputs.download-path) }}${{ needs.build_intel.outputs.filename }}
+          asset_name: ITSC-3146-Lima-${{ needs.build_intel.outputs.filename }}
+          asset_content_type: application/gzip
+
+      - name: Upload Release Files (2/2)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ${{ format('{0}/artifact/', steps.get_artifact.outputs.download-path) }}${{ needs.build_arm.outputs.filename }}
+          asset_name: ITSC-3146-Lima-${{ needs.build_arm.outputs.filename }}
+          asset_content_type: application/gzip
+
+      - name: Debug output
+        if: always()
+        uses: ./repo/.github/actions/debug_output

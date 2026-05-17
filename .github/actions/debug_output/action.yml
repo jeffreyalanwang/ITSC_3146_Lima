@@ -1,0 +1,40 @@
+name: 'Debug output'
+description: 'Output all data in the runner to simplify debugging.'
+runs:
+  using: "composite"
+  steps:
+    - name: "Debug output 1/3: ls ./"
+      if: always()
+      shell: bash
+      run: |
+        
+        # ls -l -aR ./ # find can better filter out extraneous dirs
+        find . \
+          -path './repo/.git' -prune -o \
+          -ls -print
+
+    - name: "Debug output 2/3: ls ~/"
+      if: always()
+      shell: bash
+      run: |
+        # ls ~/
+
+        # ls -R ~/ # find can better filter out extraneous dirs
+        find ~ \
+          -path ~/actions-runner -prune -o \
+          -path ~/work -prune -o \
+          -path ~/.cargo -prune -o \
+          -path ~/.rustup -prune -o \
+          -path ~/.nvm -prune -o \
+          -path ~/.dotnet -prune -o \
+          -print
+        
+    - name: "Debug output 3/3: ls $RUNNER_TEMP"
+      if: always()
+      shell: bash
+      run: |
+        # ls $RUNNER_TEMP
+
+        echo '$RUNNER_TEMP location: '"$RUNNER_TEMP"
+        ls $RUNNER_TEMP
+        # no need to use find for this directory
