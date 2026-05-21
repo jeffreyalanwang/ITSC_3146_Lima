@@ -63,6 +63,14 @@ jobs:
           stringToTruncate: ${{ github.sha }}
           maxLength: 7
 
+      - name: Create Version Name
+        id: version_name
+        run: echo "id=$VERSION_ID" >> "$GITHUB_OUTPUT"
+        env:
+          VERSION_ID: v0.2.${{ steps.truncated_sha.outputs.string }}
+        # output:
+        # id
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -80,6 +88,7 @@ jobs:
         # upload_url: The URL for uploading assets to the release.
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      name: ${{ steps.version_name.outputs.id }}
       release_id: ${{ steps.create_release.outputs.id }}
 
   attach_release_files:
@@ -158,5 +167,9 @@ jobs:
           release_id: ${{ needs.create_release.outputs.release_id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    outputs:
-      upload_url: ${{ needs.create_release.outputs.upload_url }}
+
+      - name: Delete tag (if failure occurred)
+        run: gh release delete $VERSION_ID --cleanup-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_ID: v0.2.${{ needs.create_release.outputs.name }}
