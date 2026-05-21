@@ -67,7 +67,7 @@ jobs:
           VERSION_ID: v0.2.${{ steps.truncated_sha.outputs.string }}
         with:
           tag_name: ${{ env.VERSION_ID }}
-          release_name: Release ${{ env.VERSION_ID }}
+          release_name: ${{ env.VERSION_ID }}
           draft: false
           prerelease: false
         # outputs:
