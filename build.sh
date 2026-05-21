@@ -254,7 +254,7 @@ main() {
 	
 	unmount_image "$image_mnt"
 
-	package_image "$tmp_image" "$(uname -m).img.gz" 		# Ubuntu: either x86_64 or aarch64 (filename passed on and used by limayaml)
+	package_image "$tmp_image" "$BUILD_DIR/$(uname -m).img.gz" # Ubuntu: either x86_64 or aarch64 (filename passed on and used by limayaml)
 	delete_tmp	   # Removes anything still in $TMP_DIR
 }
 
