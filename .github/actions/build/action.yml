@@ -1,5 +1,9 @@
 name: 'Build image'
 description: 'Build image for current machine architecture'
+inputs:
+  artifact_name:
+    description: 'Name for GitHub Actions artifact upload.'
+    default: 'artifact'
 runs:
   using: "composite"
   steps:
@@ -20,17 +24,6 @@ runs:
       working-directory: ./repo/
       # creates files in: ./repo/build/
 
-    - name: Pass artifacts to other jobs
-      id: upload_artifact
-      uses: actions/upload-artifact@v4
-      with:
-        path: ./repo/build/
-        retention-days: 1
-      # outputs:
-      # artifact-id
-      # artifact-url
-      # artifact-digest
-
     - name: Pass image filename to other jobs
       id: list_images
       shell: bash
@@ -44,10 +37,19 @@ runs:
         path: ./repo/build
       # outputs:
       # filename
+
+    - name: Pass artifacts to other jobs
+      id: upload_artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ./repo/build/${{ steps.list_images.outputs.filename }}
+        retention-days: 1
+      # outputs:
+      # artifact-id
+      # artifact-url
+      # artifact-digest
 outputs:
-  artifact_id:
-    description: 'Artifact ID used to retrieve the built image later.'
-    value: ${{ steps.upload_artifact.outputs.artifact-id }}
   filename: 
     description: 'Filename for the built image.'
     value: ${{ steps.list_images.outputs.filename }}

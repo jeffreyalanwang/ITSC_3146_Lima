@@ -20,6 +20,8 @@ jobs:
       - name: Build image
         id: build_image
         uses: ./repo/.github/actions/build
+        with:
+          artifact_name: 'x86_64'
 
       - name: Debug output
         if: always()
@@ -39,6 +41,8 @@ jobs:
       - name: Build image
         id: build_image
         uses: ./repo/.github/actions/build
+        with:
+          artifact_name: 'aarch64'
 
       # - name: Debug output
       #   if: always()
@@ -96,7 +100,7 @@ jobs:
         id: get_artifact
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: ${{ needs.build_intel.outputs.artifact_id }}
+          artifact-ids: x86_64, aarch64
           path: ~/images
         # outputs:
         # download-path
@@ -107,8 +111,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ format('{0}/artifact/', steps.get_artifact.outputs.download-path) }}${{ needs.build_intel.outputs.filename }}
-          asset_name: ITSC-3146-Lima-${{ needs.build_intel.outputs.filename }}
+          asset_path: ${{ format( '{0}/{1}/{2}',
+                            steps.get_artifact.outputs.download-path,
+                            'x86_64',
+                            needs.build_intel.outputs.filename,
+                          ) }}
+          asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'x86_64') }}
           asset_content_type: application/gzip
 
       - name: Upload Release Files (2/2)
@@ -117,8 +125,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ format('{0}/artifact/', steps.get_artifact.outputs.download-path) }}${{ needs.build_arm.outputs.filename }}
-          asset_name: ITSC-3146-Lima-${{ needs.build_arm.outputs.filename }}
+          asset_path: ${{ format( '{0}/{1}/{2}',
+                            steps.get_artifact.outputs.download-path,
+                            'aarch64',
+                            needs.build_intel.outputs.filename,
+                          ) }}
+          asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'aarch64') }}
           asset_content_type: application/gzip
 
       - name: Debug output
