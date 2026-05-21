@@ -63,7 +63,7 @@ jobs:
           stringToTruncate: ${{ github.sha }}
           maxLength: 7
 
-      - name: Create Version Name
+      - name: Generate Version Name
         id: version_name
         run: echo "id=$VERSION_ID" >> "$GITHUB_OUTPUT"
         env:
@@ -146,7 +146,9 @@ jobs:
       - create_release
       - attach_release_files
     if: |
-      always()
+      always() &&
+      ( contains(needs.*.result, 'failure') || 
+        contains(needs.*.result, 'cancelled') )
     permissions:
       contents: write # allow workflow to edit release
     steps:
