@@ -121,11 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ format( '{0}/{1}/{2}',
-                            steps.get_artifact.outputs.download-path,
-                            'x86_64',
-                            needs.build_intel.outputs.filename
-                        ) }}
+          asset_path: ${{ steps.get_artifact.outputs.download-path }}/${{ needs.build_intel.outputs.filename }}
           asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'x86_64') }}
           asset_content_type: application/gzip
 
@@ -135,11 +131,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ format( '{0}/{1}/{2}',
-                            steps.get_artifact.outputs.download-path,
-                            'aarch64',
-                            needs.build_intel.outputs.filename
-                        ) }}
+          asset_path: ${{ steps.get_artifact.outputs.download-path }}/${{ needs.build_arm.outputs.filename }}
           asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'aarch64') }}
           asset_content_type: application/gzip
 
