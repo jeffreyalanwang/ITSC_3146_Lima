@@ -153,12 +153,10 @@ jobs:
     permissions:
       contents: write # allow workflow to edit release
     steps:
-      - name: Delete Release (if failure occurred)
-        uses: liudonghua123/delete-release-action@v1
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
         with:
-          release_id: ${{ needs.create_release.outputs.release_id }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: ./
 
       - name: Delete tag (if failure occurred)
         run: gh release delete $VERSION_ID --cleanup-tag
