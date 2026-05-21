@@ -25,7 +25,7 @@ jobs:
         if: always()
         uses: ./repo/.github/actions/debug_output
     outputs:
-      artifact_id: ${{ steps.build_image.outputs.artifact-id }}
+      artifact_id: ${{ steps.build_image.outputs.artifact_id }}
       filename: ${{ steps.build_image.outputs.filename }}
 
   build_arm:
@@ -44,7 +44,7 @@ jobs:
       #   if: always()
       #   uses: ./repo/.github/actions/debug_output
     outputs:
-      artifact_id: ${{ steps.build_image.outputs.artifact-id }}
+      artifact_id: ${{ steps.build_image.outputs.artifact_id }}
       filename: ${{ steps.build_image.outputs.filename }}
 
   create_release:
