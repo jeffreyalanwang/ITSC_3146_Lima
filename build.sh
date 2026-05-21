@@ -123,9 +123,25 @@ chroot_ops() {
 	local script; script="$2"
 
 	# Prepare to chroot into image
-	systemctl start systemd-networkd		# works with guest systemd-networkd to set up NAT for guest internet
+
+	systemctl start systemd-networkd	# works with guest systemd-networkd to set up NAT for guest internet
+	
+	# Host systemd-networkd auto-configures network in container,
+	# 	but uses nftables. Thus its NAT rules are overridden by `iptables-nft`
+	#	FORWARD table (which has default policy: DROP)
+	iptables  -P FORWARD ACCEPT
+	ip6tables -P FORWARD ACCEPT 		# typically already default for ip6tables
+
+	# If network still does not work
+	# (especially if host networking also breaks around here)
+	# try: https://utcc.utoronto.ca/~cks/space/blog/linux/SystemdNetworkdResetsIpRules
+
 	systemd-nspawn --machine build -D "$fs_root" --boot --console=read-only --network-veth &
-	sleep 15
+	sleep 15							# while I believe systemd-run can wait
+										# for the container to be fully ready,
+										# we do need to wait for container's 
+										# systemd to do basic initialization
+										# (15 seconds to be totally safe)
 
 	# Perform modifications requiring chroot (see chroot_operations.sh for implicated features)
 	systemd-run --machine build --pipe /bin/bash < "$script"
@@ -168,8 +184,8 @@ file_ops() {
 	ln -s "$fs_root/home/itsc/.Xdefaults" "$fs_root/root/.Xdefaults"
 
 	# Modify .profile (see /guest/profile in repo for implicated features)
-	echo >> "$fs_root/home/itsc/.profile"						# Add a newline
-	tail -n +3 "$REPO_DIR/guest/profile" |						# Remove first 2 lines (shellcheck directive)
+	echo >> "$fs_root/home/itsc/.profile"					# Add a newline
+	tail -n +3 "$REPO_DIR/guest/profile" |					# Remove first 2 lines (shellcheck directive)
 		cat - >> "$fs_root/home/itsc/.profile"				# Append retains correct ownership
 
 	# Ensure users have something to see when they test VS Code functionality

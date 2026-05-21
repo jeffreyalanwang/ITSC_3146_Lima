@@ -40,9 +40,9 @@ jobs:
         id: build_image
         uses: ./repo/.github/actions/build
 
-      - name: Debug output
-        if: always()
-        uses: ./repo/.github/actions/debug_output
+      # - name: Debug output
+      #   if: always()
+      #   uses: ./repo/.github/actions/debug_output
     outputs:
       artifact_id: ${{ steps.build_image.outputs.artifact-id }}
       filename: ${{ steps.build_image.outputs.filename }}
