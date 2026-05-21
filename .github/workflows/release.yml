@@ -76,10 +76,9 @@ jobs:
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: v0.2.${{ steps.truncated_sha.outputs.string }}
         with:
-          tag_name: ${{ env.VERSION_ID }}
-          release_name: ${{ env.VERSION_ID }}
+          tag_name: ${{ steps.version_name.outputs.id }}
+          release_name: ${{ steps.version_name.outputs.id }}
           draft: false
           prerelease: false
         # outputs:
