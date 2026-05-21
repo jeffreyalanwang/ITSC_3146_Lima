@@ -21,7 +21,7 @@ jobs:
         id: build_image
         uses: ./repo/.github/actions/build
         with:
-          artifact_name: 'x86_64'
+          artifact_name: image-x86_64
 
       - name: Debug output
         if: always()
@@ -42,7 +42,7 @@ jobs:
         id: build_image
         uses: ./repo/.github/actions/build
         with:
-          artifact_name: 'aarch64'
+          artifact_name: image-aarch64
 
       # - name: Debug output
       #   if: always()
@@ -100,7 +100,8 @@ jobs:
         id: get_artifact
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: x86_64, aarch64
+          pattern: image-*
+          merge-multiple: true
           path: ~/images
         # outputs:
         # download-path
