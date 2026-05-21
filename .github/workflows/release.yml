@@ -146,9 +146,7 @@ jobs:
       - create_release
       - attach_release_files
     if: |
-      always() &&
-      ( contains(needs.*.result, 'failure') || 
-        contains(needs.*.result, 'cancelled') )
+      always()
     permissions:
       contents: write # allow workflow to edit release
     steps:
