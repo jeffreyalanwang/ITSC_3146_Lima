@@ -124,8 +124,8 @@ jobs:
           asset_path: ${{ format( '{0}/{1}/{2}',
                             steps.get_artifact.outputs.download-path,
                             'x86_64',
-                            needs.build_intel.outputs.filename,
-                          ) }}
+                            needs.build_intel.outputs.filename
+                        ) }}
           asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'x86_64') }}
           asset_content_type: application/gzip
 
@@ -138,8 +138,8 @@ jobs:
           asset_path: ${{ format( '{0}/{1}/{2}',
                             steps.get_artifact.outputs.download-path,
                             'aarch64',
-                            needs.build_intel.outputs.filename,
-                          ) }}
+                            needs.build_intel.outputs.filename
+                        ) }}
           asset_name: ${{ format('ITSC-3146-Lima-{0}.img.gzip', 'aarch64') }}
           asset_content_type: application/gzip
 
